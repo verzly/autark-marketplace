@@ -32,6 +32,12 @@
       "branch": "main"
     },
     "installed_check": "{app}/app/unsloth_studio/Scripts/python.exe",
+    "version_check": [
+      "{app}/app/unsloth_studio/Scripts/python.exe",
+      "-I",
+      "-c",
+      "import importlib.metadata as m; print(m.version('unsloth'))"
+    ],
     "steps": [
       {
         "name": "Running app setup",
