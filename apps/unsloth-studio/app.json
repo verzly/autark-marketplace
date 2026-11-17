@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "id": "unsloth-studio",
+  "name": "Unsloth Studio",
+  "description": "Run Unsloth Studio locally with a pinned, folder-local toolchain.",
+  "version": "2026.11.0",
+  "homepage": "https://github.com/unslothai/unsloth",
+  "license": "AGPL-3.0",
+  "requirements": {
+    "disk_gb": 12,
+    "webview2": true
+  },
+  "settings": [
+    {
+      "key": "port",
+      "label": "Port",
+      "kind": "port",
+      "default": 8888,
+      "help": "Local port for the Studio web interface."
+    }
+  ],
+  "setup": {
+    "tools": {
+      "bun": "1",
+      "cmake": "latest",
+      "node": "24",
+      "python": "3.13",
+      "uv": "0.13.1"
+    },
+    "source": {
+      "url": "https://github.com/unslothai/unsloth.git",
+      "branch": "main"
+    },
+    "installed_check": "{app}/app/unsloth_studio/Scripts/python.exe",
+    "steps": [
+      {
+        "name": "Running app setup",
+        "run": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "{source}/install.ps1",
+          "--local",
+          "--skip-autostart",
+          "--isolated-uv-cache"
+        ]
+      }
+    ]
+  },
+  "launch": {
+    "url": "http://127.0.0.1:{settings.port}",
+    "run": [
+      "{app}/app/unsloth_studio/Scripts/python.exe",
+      "-I",
+      "-m",
+      "unsloth_cli",
+      "studio",
+      "-H",
+      "127.0.0.1",
+      "-p",
+      "{settings.port}"
+    ]
+  },
+  "env": {
+    "UNSLOTH_SKIP_AUTOSTART": "1",
+    "UNSLOTH_STUDIO_HOME": "{app}/app",
+    "HF_HOME": "{app}/huggingface",
+    "HF_HUB_CACHE": "{app}/huggingface/hub"
+  }
+}
