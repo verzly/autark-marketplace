@@ -18,6 +18,35 @@
       "kind": "port",
       "default": 8888,
       "help": "Local port for the Studio web interface."
+    },
+    {
+      "key": "studio_home",
+      "label": "Studio config folder",
+      "kind": "path",
+      "default": "{app}/app",
+      "locked_by": [
+        "UNSLOTH_STUDIO_HOME",
+        "STUDIO_HOME"
+      ],
+      "help": "Where Studio keeps its settings and database. Defaults to this app's folder."
+    },
+    {
+      "key": "hf_home",
+      "label": "Models folder",
+      "kind": "path",
+      "default": "{app}/huggingface",
+      "locked_by": [
+        "HF_HOME",
+        "HF_HUB_CACHE"
+      ],
+      "help": "Where downloaded models are stored. Defaults to this app's folder."
+    },
+    {
+      "key": "import_config",
+      "label": "Copy my existing Studio config",
+      "kind": "boolean",
+      "default": false,
+      "help": "Copies %USERPROFILE%\\.unsloth\\studio into this install once, so your current Studio settings carry over."
     }
   ],
   "setup": {
@@ -40,6 +69,19 @@
       "import importlib.metadata as m; print(m.version('unsloth'))"
     ],
     "steps": [
+      {
+        "name": "Copying existing config",
+        "when_setting": "import_config",
+        "optional": true,
+        "run": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "$src = Join-Path $env:USERPROFILE '.unsloth\\studio'; $dst = '{app}/app'; if (Test-Path $src) { New-Item -ItemType Directory -Force $dst | Out-Null; Get-ChildItem $src -Force | ForEach-Object { $target = Join-Path $dst $_.Name; if (-not (Test-Path $target)) { Copy-Item $_.FullName $target -Recurse -Force } }; Write-Output 'copied existing Studio config' } else { Write-Output 'no existing Studio config to copy' }"
+        ]
+      },
       {
         "name": "Running app setup",
         "run": [
@@ -72,8 +114,14 @@
   },
   "env": {
     "UNSLOTH_SKIP_AUTOSTART": "1",
-    "UNSLOTH_STUDIO_HOME": "{app}/app",
-    "HF_HOME": "{app}/huggingface",
-    "HF_HUB_CACHE": "{app}/huggingface/hub"
-  }
+    "UNSLOTH_STUDIO_HOME": "{settings.studio_home}",
+    "HF_HOME": "{settings.hf_home}",
+    "HF_HUB_CACHE": "{settings.hf_home}/hub"
+  },
+  "env_keep_parent": [
+    "UNSLOTH_STUDIO_HOME",
+    "STUDIO_HOME",
+    "HF_HOME",
+    "HF_HUB_CACHE"
+  ]
 }
