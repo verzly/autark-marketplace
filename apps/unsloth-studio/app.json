@@ -2,6 +2,7 @@
   "schema": 1,
   "id": "unsloth-studio",
   "name": "Unsloth Studio",
+  "icon": "icon.png",
   "description": "Run Unsloth Studio locally with a pinned, folder-local toolchain.",
   "version": "2026.11.0",
   "homepage": "https://github.com/unslothai/unsloth",
