@@ -116,7 +116,11 @@
     "UNSLOTH_SKIP_AUTOSTART": "1",
     "UNSLOTH_STUDIO_HOME": "{settings.studio_home}",
     "HF_HOME": "{settings.hf_home}",
-    "HF_HUB_CACHE": "{settings.hf_home}/hub"
+    "HF_HUB_CACHE": "{settings.hf_home}/hub",
+    "XDG_CACHE_HOME": "{settings.studio_home}/cache",
+    "TORCH_HOME": "{settings.studio_home}/cache/torch",
+    "TORCHINDUCTOR_CACHE_DIR": "{settings.studio_home}/cache/torchinductor",
+    "TRITON_CACHE_DIR": "{settings.studio_home}/cache/triton"
   },
   "env_keep_parent": [
     "UNSLOTH_STUDIO_HOME",
