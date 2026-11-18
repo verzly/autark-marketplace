@@ -122,6 +122,45 @@
     "TORCHINDUCTOR_CACHE_DIR": "{settings.studio_home}/cache/torchinductor",
     "TRITON_CACHE_DIR": "{settings.studio_home}/cache/triton"
   },
+  "actions": [
+    {
+      "id": "open-studio-folder",
+      "label": "Open Studio folder",
+      "run": [
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Start-Process -FilePath explorer.exe -ArgumentList '{settings.studio_home}'"
+      ]
+    },
+    {
+      "id": "open-models-folder",
+      "label": "Open models folder",
+      "run": [
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Start-Process -FilePath explorer.exe -ArgumentList '{settings.hf_home}'"
+      ]
+    },
+    {
+      "id": "clear-compile-caches",
+      "label": "Clear compile caches",
+      "confirm": true,
+      "run": [
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "foreach ($dir in @('{settings.studio_home}/cache/torchinductor', '{settings.studio_home}/cache/triton')) { if (Test-Path $dir) { Remove-Item $dir -Recurse -Force; Write-Output ('removed ' + $dir) } else { Write-Output ('missing ' + $dir) } }"
+      ]
+    }
+  ],
   "env_keep_parent": [
     "UNSLOTH_STUDIO_HOME",
     "STUDIO_HOME",
