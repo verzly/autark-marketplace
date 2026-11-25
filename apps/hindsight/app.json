@@ -3,9 +3,16 @@
   "id": "hindsight",
   "name": "Hindsight",
   "icon": "icon.png",
+  "faq": [
+    {
+      "question": "Hindsight says No model loaded (HTTP 400)",
+      "answer": "Start the LLM server and load the model, or enable Switch model by request in the server's API settings. The LLM model ID in Hindsight must match the ID the Models button lists."
+    }
+  ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
   "version": "2026.11.0",
   "homepage": "https://github.com/vectorize-io/hindsight",
+  "upstream": "vectorize-io/hindsight",
   "license": "MIT",
   "settings": [
     {
