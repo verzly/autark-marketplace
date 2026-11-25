@@ -3,9 +3,16 @@
   "id": "unsloth-studio",
   "name": "Unsloth Studio",
   "icon": "icon.png",
+  "faq": [
+    {
+      "question": "The model does not load (HTTP 400: No model loaded)",
+      "answer": "Enable API → Switch model by request. Unsloth then loads the downloaded model named in the request before serving it. Keep the model ID in the client identical to the name the server reports."
+    }
+  ],
   "description": "Run Unsloth Studio locally with a pinned, folder-local toolchain.",
   "version": "2026.11.0",
   "homepage": "https://github.com/unslothai/unsloth",
+  "upstream": "unslothai/unsloth",
   "license": "AGPL-3.0",
   "requirements": {
     "disk_gb": 12,
