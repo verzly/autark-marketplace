@@ -7,6 +7,7 @@ Autark clones this repository; a merged PR reaches every user on their next manu
 | App | Version | License | Source |
 | --- | --- | --- | --- |
 | Unsloth Studio | 2026.11.0 | AGPL-3.0 | https://github.com/unslothai/unsloth |
+| [Hindsight](apps/hindsight/README.md) | 2026.11.0 | MIT | https://github.com/vectorize-io/hindsight |
 
 ## Adding an app
 
