@@ -24,7 +24,7 @@ The settings expose every Hindsight value supplied by this recipe: API port, dat
 
 The installed dependencies support the default providers. Selecting another provider may require additional packages and configuration. Settings are not secret storage: keep the LLM key in its separate file, and do not put credentials in the database URL. Selecting another database URL does not migrate existing data.
 
-Existing installations must run **Update** once to ensure python-dotenv supports the disable flag. The loopback bind address and app-local pg0/Hugging Face/uv infrastructure paths remain fixed by the recipe.
+Existing installations must run **Update** once to ensure python-dotenv supports the disable flag. The file picker for **LLM API key file** needs an Autark build that accepts the `file` setting kind; older builds reject the manifest. The loopback bind address and app-local pg0/Hugging Face/uv infrastructure paths remain fixed by the recipe.
 
 ## Files and updates
 

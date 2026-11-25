@@ -10,7 +10,7 @@
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.0",
+  "version": "2026.11.1",
   "homepage": "https://github.com/vectorize-io/hindsight",
   "upstream": "vectorize-io/hindsight",
   "license": "MIT",
@@ -143,6 +143,7 @@
   },
   "env": {
     "PYTHON_DOTENV_DISABLED": "1",
+    "HINDSIGHT_API_SKIP_LLM_VERIFICATION": "1",
     "AUTARK_HINDSIGHT_KEY_FILE": "{settings.llm_api_key_file}",
     "HINDSIGHT_API_DATABASE_URL": "{settings.database_url}",
     "HINDSIGHT_API_LLM_PROVIDER": "{settings.llm_provider}",
