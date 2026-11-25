@@ -108,7 +108,7 @@
     "steps": [
       {
         "name": "Create Python environment",
-        "run": ["uv", "venv", "--python", "3.12", "{app}/venv"]
+        "run": ["uv", "venv", "--allow-existing", "--python", "3.12", "{app}/venv"]
       },
       {
         "name": "Install Hindsight with ONNX, FlashRank and embedded PostgreSQL",
