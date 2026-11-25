@@ -2,6 +2,7 @@
   "schema": 1,
   "id": "hindsight",
   "name": "Hindsight",
+  "icon": "icon.png",
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
   "version": "2026.11.0",
   "homepage": "https://github.com/vectorize-io/hindsight",
@@ -45,7 +46,7 @@
     {
       "key": "llm_api_key_file",
       "label": "LLM API key file",
-      "kind": "path",
+      "kind": "file",
       "default": "{app}/llm-api-key.txt",
       "help": "Type the full path to a UTF-8 file containing only the LLM key. Never enter the key itself here."
     },
