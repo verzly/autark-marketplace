@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "id": "hindsight-control-plane",
+  "name": "Hindsight Control Plane",
+  "icon": "icon.png",
+  "description": "Web interface for a running Hindsight API. It runs from this app's own folder and talks to the API URL you set.",
+  "version": "2026.11.0",
+  "homepage": "https://github.com/vectorize-io/hindsight",
+  "upstream": "vectorize-io/hindsight",
+  "license": "ISC",
+  "faq": [
+    {
+      "question": "The interface starts but shows no data",
+      "answer": "Start the Hindsight app first, then check that the Hindsight API URL points at its API port (default http://127.0.0.1:8890). The Test button on the Hindsight side confirms the API answers."
+    }
+  ],
+  "settings": [
+    {
+      "key": "port",
+      "label": "Interface port",
+      "kind": "port",
+      "default": 9990,
+      "help": "The interface listens only on 127.0.0.1."
+    },
+    {
+      "key": "api_url",
+      "label": "Hindsight API URL",
+      "kind": "text",
+      "default": "http://127.0.0.1:8890",
+      "help": "Address of the running Hindsight API. No trailing slash."
+    }
+  ],
+  "setup": {
+    "tools": {
+      "node": "24"
+    },
+    "installed_check": "{app}/node_modules/@vectorize-io/hindsight-control-plane/bin/cli.js",
+    "version_check": [
+      "node",
+      "-e",
+      "console.log(require('{app}/node_modules/@vectorize-io/hindsight-control-plane/package.json').version)"
+    ],
+    "steps": [
+      {
+        "name": "Install the control plane",
+        "run": [
+          "npm", "install",
+          "--prefix", "{app}",
+          "--no-audit", "--no-fund",
+          "@vectorize-io/hindsight-control-plane@1.3.0"
+        ]
+      }
+    ]
+  },
+  "launch": {
+    "run": [
+      "node",
+      "{app}/node_modules/@vectorize-io/hindsight-control-plane/bin/cli.js",
+      "--hostname", "127.0.0.1",
+      "--port", "{settings.port}",
+      "--api-url", "{settings.api_url}"
+    ],
+    "url": "http://127.0.0.1:{settings.port}"
+  },
+  "env": {
+    "NPM_CONFIG_CACHE": "{app}/cache/npm",
+    "npm_config_cache": "{app}/cache/npm",
+    "HINDSIGHT_CP_DATAPLANE_API_URL": "{settings.api_url}"
+  }
+}

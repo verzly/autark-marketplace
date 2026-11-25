@@ -18,6 +18,8 @@ The API binds only to `127.0.0.1`. This recipe does not enable API authenticatio
 
 Use Hindsight's app settings in Autark, then restart Hindsight to apply changes. Autark passes the selected values as child-process environment variables at launch; no `.env` file is needed or loaded. `PYTHON_DOTENV_DISABLED=1` prevents a discovered `.env` from replacing the selected endpoint, key or other settings.
 
+Use **Test** beside LLM base URL to check endpoint reachability and **Check** beside model ID to confirm the model is listed.
+
 The settings expose every Hindsight value supplied by this recipe: API port, database URL, LLM provider/base URL/model/key-file path/concurrency, embedding provider/ONNX model/dimensions, and reranker provider/FlashRank cache folder. Defaults remain OpenAI-compatible LLM, one concurrent request, ONNX `intfloat/multilingual-e5-small` with 384 dimensions, FlashRank and `pg0://hindsight`. This is not a settings editor for every option supported by upstream Hindsight.
 
 The installed dependencies support the default providers. Selecting another provider may require additional packages and configuration. Settings are not secret storage: keep the LLM key in its separate file, and do not put credentials in the database URL. Selecting another database URL does not migrate existing data.
