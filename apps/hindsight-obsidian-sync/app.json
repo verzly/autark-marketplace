@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "id": "hindsight-obsidian-sync",
+  "name": "Hindsight Obsidian Sync",
+  "icon": "icon.png",
+  "description": "Syncs an Obsidian vault into a Hindsight bank without the Obsidian app, using the hindsight-obsidian-sync CLI from this app's own folder.",
+  "version": "2026.11.1",
+  "homepage": "https://hindsight.vectorize.io",
+  "upstream": "npm:@vectorize-io/hindsight-obsidian",
+  "license": "MIT",
+  "faq": [
+    {
+      "question": "The app stops immediately after start",
+      "answer": "Set the vault folder and the API token, then start again. The Output tab shows the CLI message for a missing vault, a rejected token or an unreachable API."
+    },
+    {
+      "question": "Where is the sync index stored",
+      "answer": "Outside the vault, under your home folder in ~/.hindsight/obsidian/, so Obsidian Sync never copies it. Delete that file to force a full reingest."
+    },
+    {
+      "question": "Can it run next to the Obsidian plugin",
+      "answer": "Yes, but keep the two configurations identical (folders, bank, vault name, document-id prefix, timestamp source). Each frontend prunes only what its own index tracks."
+    }
+  ],
+  "settings": [
+    {
+      "key": "vault_path",
+      "label": "Vault folder",
+      "kind": "path",
+      "default": "",
+      "help": "Folder of the Obsidian vault to sync. Required."
+    },
+    {
+      "key": "bank",
+      "label": "Hindsight bank",
+      "kind": "text",
+      "default": "obsidian",
+      "help": "Bank that receives the notes."
+    },
+    {
+      "key": "api_url",
+      "label": "Hindsight API URL",
+      "kind": "text",
+      "default": "http://127.0.0.1:8890",
+      "help": "Address of the Hindsight API. No trailing slash."
+    },
+    {
+      "key": "api_token",
+      "label": "API token",
+      "kind": "text",
+      "default": "",
+      "help": "Sent as HINDSIGHT_API_TOKEN, not on the command line. Stored in this app's settings.json file."
+    },
+    {
+      "key": "timestamp_from",
+      "label": "Fact date source",
+      "kind": "text",
+      "default": "created",
+      "help": "created dates facts by the note creation time, updated by the last edit. Use updated for notes you keep editing."
+    }
+  ],
+  "setup": {
+    "tools": {
+      "node": "24"
+    },
+    "installed_check": "{app}/node_modules/@vectorize-io/hindsight-obsidian/dist/cli.js",
+    "version_check": [
+      "node",
+      "-e",
+      "console.log(require('./node_modules/@vectorize-io/hindsight-obsidian/package.json').version)"
+    ],
+    "steps": [
+      {
+        "name": "Install the sync CLI",
+        "run": [
+          "npm", "install",
+          "--prefix", "{app}",
+          "--no-audit", "--no-fund",
+          "@vectorize-io/hindsight-obsidian@0.4.1"
+        ]
+      }
+    ]
+  },
+  "launch": {
+    "run": [
+      "node",
+      "{app}/node_modules/@vectorize-io/hindsight-obsidian/dist/cli.js",
+      "reconcile",
+      "--vault", "{settings.vault_path}",
+      "--bank", "{settings.bank}",
+      "--watch",
+      "--timestamp-from", "{settings.timestamp_from}"
+    ]
+  },
+  "actions": [
+    {
+      "id": "sync-now",
+      "label": "Sync vault now",
+      "run": [
+        "node",
+        "{app}/node_modules/@vectorize-io/hindsight-obsidian/dist/cli.js",
+        "reconcile",
+        "--vault", "{settings.vault_path}",
+        "--bank", "{settings.bank}",
+        "--timestamp-from", "{settings.timestamp_from}"
+      ]
+    }
+  ],
+  "env": {
+    "NPM_CONFIG_CACHE": "{app}/cache/npm",
+    "npm_config_cache": "{app}/cache/npm",
+    "HINDSIGHT_API_URL": "{settings.api_url}",
+    "HINDSIGHT_API_TOKEN": "{settings.api_token}"
+  }
+}
