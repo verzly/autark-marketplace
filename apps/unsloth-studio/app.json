@@ -10,7 +10,7 @@
     }
   ],
   "description": "Run Unsloth Studio locally with a pinned, folder-local toolchain.",
-  "version": "2026.11.0",
+  "version": "2026.11.2",
   "homepage": "https://github.com/unslothai/unsloth",
   "upstream": "unslothai/unsloth",
   "license": "AGPL-3.0",
@@ -73,7 +73,8 @@
       "{app}/app/unsloth_studio/Scripts/python.exe",
       "-I",
       "-c",
-      "import importlib.metadata as m; print(m.version('unsloth'))"
+      "import importlib.metadata as m, json, sys, contextlib; tag = 'unknown'\nwith contextlib.suppress(Exception):\n    value = json.load(open(sys.argv[1], encoding='utf-8')).get('release_tag')\n    tag = value.strip() if isinstance(value, str) and value.strip() else tag\nprint(m.version('unsloth') + ' | llama.cpp ' + tag)",
+      "{settings.studio_home}/llama.cpp/UNSLOTH_PREBUILT_INFO.json"
     ],
     "steps": [
       {
@@ -152,6 +153,17 @@
         "Bypass",
         "-Command",
         "Start-Process -FilePath explorer.exe -ArgumentList '{settings.hf_home}'"
+      ]
+    },
+    {
+      "id": "update-runtime",
+      "label": "Update runtime",
+      "confirm": true,
+      "run": [
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        "$env:UNSLOTH_TAURI_UPDATE='1'; & '{app}/app/unsloth_studio/Scripts/python.exe' -I -m unsloth_cli studio update; exit $LASTEXITCODE"
       ]
     },
     {
