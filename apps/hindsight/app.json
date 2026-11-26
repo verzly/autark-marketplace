@@ -10,7 +10,7 @@
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.3",
+  "version": "2026.11.4",
   "homepage": "https://github.com/vectorize-io/hindsight",
   "upstream": "vectorize-io/hindsight",
   "license": "MIT",
@@ -98,6 +98,27 @@
       "kind": "text",
       "default": "low",
       "help": "Sent only when the provider supports it. low keeps the reasoning overhead small."
+    },
+    {
+      "key": "retain_llm_reasoning_effort",
+      "label": "Fact extraction reasoning effort",
+      "kind": "text",
+      "default": "low",
+      "help": "Reasoning effort for retain (fact extraction). Blank falls back to the global LLM reasoning effort."
+    },
+    {
+      "key": "consolidation_llm_reasoning_effort",
+      "label": "Consolidation reasoning effort",
+      "kind": "text",
+      "default": "low",
+      "help": "Reasoning effort for consolidation. low is enough to merge and organise memories. Blank falls back to the global value."
+    },
+    {
+      "key": "reflect_llm_reasoning_effort",
+      "label": "Reflect reasoning effort",
+      "kind": "text",
+      "default": "medium",
+      "help": "Reasoning effort for reflect answers, which reason over the stored memories. Blank falls back to the global value."
     },
     {
       "key": "embeddings_provider",
@@ -189,6 +210,9 @@
     "HINDSIGHT_API_RETAIN_LLM_TIMEOUT": "{settings.retain_llm_timeout}",
     "HINDSIGHT_API_LLM_MAX_RETRIES": "{settings.llm_max_retries}",
     "HINDSIGHT_API_LLM_REASONING_EFFORT": "{settings.llm_reasoning_effort}",
+    "HINDSIGHT_API_RETAIN_LLM_REASONING_EFFORT": "{settings.retain_llm_reasoning_effort}",
+    "HINDSIGHT_API_CONSOLIDATION_LLM_REASONING_EFFORT": "{settings.consolidation_llm_reasoning_effort}",
+    "HINDSIGHT_API_REFLECT_LLM_REASONING_EFFORT": "{settings.reflect_llm_reasoning_effort}",
     "HINDSIGHT_API_LLM_OUTPUT_LANGUAGE": "{settings.llm_output_language}",
     "HINDSIGHT_API_EMBEDDINGS_PROVIDER": "{settings.embeddings_provider}",
     "HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID": "{settings.embeddings_onnx_model_id}",
