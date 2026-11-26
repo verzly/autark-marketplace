@@ -4,7 +4,7 @@
   "name": "Hindsight Control Plane",
   "icon": "icon.png",
   "description": "Web interface for a running Hindsight API. It runs from this app's own folder and talks to the API URL you set.",
-  "version": "2026.11.1",
+  "version": "2026.11.2",
   "homepage": "https://github.com/vectorize-io/hindsight",
   "upstream": "npm:@vectorize-io/hindsight-control-plane",
   "license": "ISC",
@@ -38,7 +38,7 @@
     "version_check": [
       "node",
       "-e",
-      "console.log(require('{app}/node_modules/@vectorize-io/hindsight-control-plane/package.json').version)"
+      "console.log(require('./node_modules/@vectorize-io/hindsight-control-plane/package.json').version)"
     ],
     "steps": [
       {
