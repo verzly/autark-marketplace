@@ -10,7 +10,7 @@
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.2",
+  "version": "2026.11.3",
   "homepage": "https://github.com/vectorize-io/hindsight",
   "upstream": "vectorize-io/hindsight",
   "license": "MIT",
@@ -84,6 +84,13 @@
       "kind": "number",
       "default": 1,
       "help": "Retries per LLM request. Keep 1 to avoid queueing the same request many times on a local server."
+    },
+    {
+      "key": "llm_output_language",
+      "label": "LLM output language",
+      "kind": "text",
+      "default": "English",
+      "help": "Language of the extracted facts, observations and reflect answers. English keeps the stored memory consistent with the code and the docs."
     },
     {
       "key": "llm_reasoning_effort",
@@ -182,6 +189,7 @@
     "HINDSIGHT_API_RETAIN_LLM_TIMEOUT": "{settings.retain_llm_timeout}",
     "HINDSIGHT_API_LLM_MAX_RETRIES": "{settings.llm_max_retries}",
     "HINDSIGHT_API_LLM_REASONING_EFFORT": "{settings.llm_reasoning_effort}",
+    "HINDSIGHT_API_LLM_OUTPUT_LANGUAGE": "{settings.llm_output_language}",
     "HINDSIGHT_API_EMBEDDINGS_PROVIDER": "{settings.embeddings_provider}",
     "HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID": "{settings.embeddings_onnx_model_id}",
     "HINDSIGHT_API_EMBEDDINGS_ONNX_DIMENSIONS": "{settings.embeddings_onnx_dimensions}",
