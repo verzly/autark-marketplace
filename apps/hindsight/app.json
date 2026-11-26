@@ -10,7 +10,7 @@
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.1",
+  "version": "2026.11.2",
   "homepage": "https://github.com/vectorize-io/hindsight",
   "upstream": "vectorize-io/hindsight",
   "license": "MIT",
@@ -63,6 +63,34 @@
       "kind": "number",
       "default": 1,
       "help": "Positive integer. Keep 1 for an LLM server that handles one request at a time."
+    },
+    {
+      "key": "llm_timeout",
+      "label": "LLM timeout (seconds)",
+      "kind": "number",
+      "default": 300,
+      "help": "Maximum time for a single LLM request. Local models need more than the upstream default of 120."
+    },
+    {
+      "key": "retain_llm_timeout",
+      "label": "Fact extraction timeout (seconds)",
+      "kind": "number",
+      "default": 300,
+      "help": "Timeout for the retain (fact extraction) LLM calls. Keep it at or above the LLM timeout."
+    },
+    {
+      "key": "llm_max_retries",
+      "label": "LLM maximum retries",
+      "kind": "number",
+      "default": 1,
+      "help": "Retries per LLM request. Keep 1 to avoid queueing the same request many times on a local server."
+    },
+    {
+      "key": "llm_reasoning_effort",
+      "label": "LLM reasoning effort",
+      "kind": "text",
+      "default": "low",
+      "help": "Sent only when the provider supports it. low keeps the reasoning overhead small."
     },
     {
       "key": "embeddings_provider",
@@ -150,6 +178,10 @@
     "HINDSIGHT_API_LLM_BASE_URL": "{settings.llm_base_url}",
     "HINDSIGHT_API_LLM_MODEL": "{settings.llm_model}",
     "HINDSIGHT_API_LLM_MAX_CONCURRENT": "{settings.llm_max_concurrent}",
+    "HINDSIGHT_API_LLM_TIMEOUT": "{settings.llm_timeout}",
+    "HINDSIGHT_API_RETAIN_LLM_TIMEOUT": "{settings.retain_llm_timeout}",
+    "HINDSIGHT_API_LLM_MAX_RETRIES": "{settings.llm_max_retries}",
+    "HINDSIGHT_API_LLM_REASONING_EFFORT": "{settings.llm_reasoning_effort}",
     "HINDSIGHT_API_EMBEDDINGS_PROVIDER": "{settings.embeddings_provider}",
     "HINDSIGHT_API_EMBEDDINGS_ONNX_MODEL_ID": "{settings.embeddings_onnx_model_id}",
     "HINDSIGHT_API_EMBEDDINGS_ONNX_DIMENSIONS": "{settings.embeddings_onnx_dimensions}",
