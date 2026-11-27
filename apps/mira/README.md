@@ -61,7 +61,8 @@ Without the GitHub settings the dashboard still starts: the launcher builds the 
 Local review uses the app's own terminal, with the key exported for that shell and the generated config passed explicitly:
 
 ```powershell
-$env:OPENROUTER_API_KEY = Get-Content <llm key file> -Raw
+Set-Location <your repository>
+$env:OPENROUTER_API_KEY = (Get-Content <llm key file> -Raw).Trim()
 git diff main...HEAD | <app>/venv/Scripts/mira.exe review --stdin --config <app>/user-data/mira.yaml
 ```
 
