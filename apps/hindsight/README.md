@@ -55,3 +55,13 @@ The optional Hindsight Control Plane is not installed. Its usual port, `9999`, i
 - [Configuration](https://hindsight.vectorize.io/developer/configuration)
 - [Hindsight v1.3.0](https://github.com/vectorize-io/hindsight/tree/v1.3.0)
 - [pg0 runtime paths](https://github.com/vectorize-io/pg0)
+## Shared pg0 binaries
+
+The embedded PostgreSQL binaries stay in this app by default (`<app>/pg0/installation`). Sharing Autark's copy (`<root>/runtime/pg0/installation`) is opt-in through the migration buttons, because pg0 extracts the payload without a cross-process lock: two apps starting at the same time against an empty shared folder could publish a partial installation. The migration copies the folder while the app is stopped. Each app always keeps its own databases under `<app>/pg0`.
+
+Existing installs that still hold their own copy can switch with the **Move to Autark** button on the app settings page. Autark stops the app, backs up the folder under `<root>/backups/pg0/`, copies it to the new place and records the setting. **Move into the app** does the same in reverse. The old copy is never deleted automatically.
+## Using Autark's pg0 executable
+
+When Autark has pg0 installed as a built-in tool (`<root>/runtime/mise-data/shims/pg0.exe`), the launch command points `PG0_EXECUTABLE` at it. The bundled copy inside this app is then unused. Without that file the app keeps using its own bundled `pg0.exe`, so nothing breaks.
+
+Recipe `2026.11.8` declares this host-executable use with `requirements.pg0: true`. Autark blocks removal of its pg0 while Hindsight is installed, even when stopped, and shows Hindsight in the blocking-app list. This protection is independent of the PostgreSQL binaries folder: choosing an app-local payload does not mean the app uses its bundled executable. Refresh the marketplace to select the newer stable recipe; pinned previews retain their own recipe declaration.
