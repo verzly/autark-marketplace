@@ -14,6 +14,41 @@ ROOT = Path(__file__).resolve().parents[1]
 VERSIONS_PATH = ROOT / "versions.json"
 
 
+def resolve_version(source: str, token: str | None) -> str:
+    """Return the latest version for a version_source value.
+
+    Supported: ``github:owner/repo`` (latest release tag) and
+    ``pypi:package`` (latest published version).
+    """
+    kind, _, target = source.partition(":")
+    if not target:
+        raise ValueError(f"invalid version_source {source!r}")
+    if kind == "pypi":
+        request = Request(
+            f"https://pypi.org/pypi/{target}/json",
+            headers={"Accept": "application/json"},
+        )
+        with urlopen(request, timeout=30) as response:
+            version = json.load(response).get("info", {}).get("version")
+        if not isinstance(version, str) or not version:
+            raise ValueError("PyPI response has no version")
+        return version
+    if kind == "github":
+        headers = {"Accept": "application/vnd.github+json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        request = Request(
+            f"https://api.github.com/repos/{target}/releases/latest",
+            headers=headers,
+        )
+        with urlopen(request, timeout=30) as response:
+            tag = json.load(response).get("tag_name")
+        if not isinstance(tag, str) or not tag:
+            raise ValueError("release has no tag_name")
+        return tag
+    raise ValueError(f"unsupported version_source {source!r}")
+
+
 def main():
     previous = {}
     if VERSIONS_PATH.exists():
@@ -33,29 +68,20 @@ def main():
         try:
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             upstream = manifest.get("upstream", "")
+            source = manifest.get("version_source", "")
         except (OSError, json.JSONDecodeError, AttributeError) as exc:
             print(f"{app_id}: cannot read manifest: {exc}", file=sys.stderr)
             failures += 1
             continue
-        if not isinstance(upstream, str) or not re.fullmatch(
-            r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", upstream
-        ):
-            continue
-
-        headers = {"Accept": "application/vnd.github+json"}
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-        request = Request(
-            f"https://api.github.com/repos/{upstream}/releases/latest",
-            headers=headers,
-        )
+        if not isinstance(source, str) or not source:
+            if isinstance(upstream, str) and re.fullmatch(
+                r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", upstream
+            ):
+                source = f"github:{upstream}"
+            else:
+                continue
         try:
-            with urlopen(request, timeout=30) as response:
-                release = json.load(response)
-            tag = release.get("tag_name")
-            if not isinstance(tag, str) or not tag:
-                raise ValueError("release has no tag_name")
-            updated[app_id] = tag
+            updated[app_id] = resolve_version(source, token)
             successes += 1
         except (HTTPError, URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
             print(f"{app_id}: release lookup failed: {exc}", file=sys.stderr)

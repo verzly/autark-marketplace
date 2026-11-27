@@ -4,7 +4,9 @@ This repository contains manifests for apps that Autark installs and runs. Autar
 
 Autark clones this repository; a merged PR reaches every user on their next manual refresh.
 
-`versions.json` caches latest GitHub release tags for apps. A daily GitHub Actions workflow refreshes it, so Autark can check for updates without querying GitHub per app.
+`versions.json` caches the latest upstream versions so Autark can check for updates without querying each provider per app. A daily GitHub Actions workflow refreshes it.
+
+Each app declares its source: `upstream` (GitHub `owner/repo`, latest release) by default, or an optional `version_source` such as `github:owner/repo` or `pypi:package`. Unsloth uses `pypi:unsloth` because its app version is the `unsloth` Python package version; the bundled llama.cpp prebuilt tag is not part of that number. Unsloth records it as `release_tag` in `<studio_home>/llama.cpp/UNSLOTH_PREBUILT_INFO.json`, taken from the `unslothai/llama.cpp` releases, and the app version line shows it as `... | llama.cpp b<number>`.
 
 | App | Version | License | Source |
 | --- | --- | --- | --- |

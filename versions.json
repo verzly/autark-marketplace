@@ -1,7 +1,9 @@
 {
   "schema": 1,
-  "updated": "2026-11-27T00:00:00Z",
+  "updated": "2026-11-27T17:02:40Z",
   "apps": {
-    "mira": "v0.11.1"
+    "hindsight": "v1.3.0",
+    "mira": "v0.11.1",
+    "unsloth-studio": "2026.11.12"
   }
 }
