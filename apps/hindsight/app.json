@@ -10,7 +10,7 @@
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.4",
+  "version": "2026.11.5",
   "homepage": "https://github.com/vectorize-io/hindsight",
   "upstream": "vectorize-io/hindsight",
   "license": "MIT",
@@ -21,6 +21,13 @@
       "kind": "port",
       "default": 8890,
       "help": "The API listens only on 127.0.0.1."
+    },
+    {
+      "key": "pg0_installation_dir",
+      "label": "pg0 binaries folder",
+      "kind": "path",
+      "default": "{root}/runtime/pg0/installation",
+      "help": "PostgreSQL binaries for the embedded database. Autark keeps one copy for every app; the databases stay in this app. Use the migration buttons on the app settings page to move an existing local copy."
     },
     {
       "key": "database_url",
@@ -220,7 +227,7 @@
     "HINDSIGHT_API_RERANKER_PROVIDER": "{settings.reranker_provider}",
     "HINDSIGHT_API_RERANKER_FLASHRANK_CACHE_DIR": "{settings.reranker_flashrank_cache_dir}",
     "PG0_HOME": "{app}/pg0",
-    "PG0_INSTALLATION_DIR": "{app}/pg0/installation",
+    "PG0_INSTALLATION_DIR": "{settings.pg0_installation_dir}",
     "HF_HOME": "{app}/cache/huggingface",
     "HF_HUB_CACHE": "{app}/cache/huggingface/hub",
     "XDG_CACHE_HOME": "{app}/cache",

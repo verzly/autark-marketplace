@@ -55,3 +55,8 @@ The optional Hindsight Control Plane is not installed. Its usual port, `9999`, i
 - [Configuration](https://hindsight.vectorize.io/developer/configuration)
 - [Hindsight v1.3.0](https://github.com/vectorize-io/hindsight/tree/v1.3.0)
 - [pg0 runtime paths](https://github.com/vectorize-io/pg0)
+## Shared pg0 binaries
+
+The embedded PostgreSQL binaries live in Autark's shared folder (`<root>/runtime/pg0/installation`) by default, so every app that uses `pg0` reuses one copy. Each app keeps its own databases under `<app>/pg0`.
+
+Existing installs that still hold their own copy can switch with the **Move to Autark** button on the app settings page. Autark stops the app, backs up the folder under `<root>/backups/pg0/`, copies it to the new place and records the setting. **Move into the app** does the same in reverse. The old copy is never deleted automatically.
