@@ -27,7 +27,7 @@ Autark launches a small Python bootstrap in the app's venv. It:
 3. exports the instance URI as `DATABASE_URL`,
 4. writes `<app>/user-data/mira.yaml` with the configured `llm.base_url` and `llm.model`,
 5. reads the secret files and exports `OPENROUTER_API_KEY`, `ADMIN_PASSWORD` and the GitHub App values,
-6. runs `mira serve --host 127.0.0.1 --port <Port>`.
+6. starts the dashboard server with `uvicorn`, passing the GitHub App auth when it is configured.
 
 Mira then creates its schema in the `mira` database. SQLite is not used in this configuration.
 
@@ -56,11 +56,16 @@ Secrets are read at launch and passed as environment variables. They are never w
 
 Mira exposes the GitHub App webhook at `/github/webhook`. Fill the three GitHub settings and expose that path to GitHub, for example through a tunnel. The dashboard's GitHub sign-in uses the same GitHub App.
 
-Without the GitHub settings the dashboard and the local review CLI still work. Local review uses the app's own terminal:
+Without the GitHub settings the dashboard still starts: the launcher builds the server through `create_app` and passes no platform auth, so only the webhook routes stay off. It does not call `mira serve`, because upstream refuses to start that command without at least one platform credential.
 
+Local review uses the app's own terminal, with the key exported for that shell and the generated config passed explicitly:
+
+```powershell
+$env:OPENROUTER_API_KEY = Get-Content <llm key file> -Raw
+git diff main...HEAD | <app>/venv/Scripts/mira.exe review --stdin --config <app>/user-data/mira.yaml
 ```
-<app>/venv/Scripts/mira.exe review --base main
-```
+
+`--pr <url>` with `--github-token` reviews a pull request instead of a piped diff.
 
 ## Data and updates
 
