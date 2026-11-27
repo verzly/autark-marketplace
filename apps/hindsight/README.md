@@ -65,3 +65,15 @@ Existing installs that still hold their own copy can switch with the **Move to A
 When Autark has pg0 installed as a built-in tool (`<root>/runtime/mise-data/shims/pg0.exe`), the launch command points `PG0_EXECUTABLE` at it. The bundled copy inside this app is then unused. Without that file the app keeps using its own bundled `pg0.exe`, so nothing breaks.
 
 Recipe `2026.11.8` declares this host-executable use with `requirements.pg0: true`. Autark blocks removal of its pg0 while Hindsight is installed, even when stopped, and shows Hindsight in the blocking-app list. This protection is independent of the PostgreSQL binaries folder: choosing an app-local payload does not mean the app uses its bundled executable. Refresh the marketplace to select the newer stable recipe; pinned previews retain their own recipe declaration.
+
+## Knowledge banks
+
+Hindsight 1.3.0 ships knowledge banks: persistent, searchable reference collections separate from a memory bank. They are enabled by default. Autark defaults `HINDSIGHT_API_KB_EMBEDDINGS_PROVIDER` to `text`, which reuses this app's ONNX embeddings, so documents and markdown work without extra packages or an API key.
+
+- `local` embeddings (EmbeddingGemma, multimodal) need the torch/sentence-transformers stack, which this recipe does not install.
+- `openai`, `gemini`, `voyage` and `cohere` need their own provider key.
+- Knowledge banks are used by **reflect**, not by memory recall or the coding agent's automatic session recall. Ask a reflect question, or search the bank in the dashboard.
+- Create and fill banks in the dashboard, then link them under a memory bank's Bank Configuration. Re-uploading with the same `document_id` replaces the document; it is not model training and does not rewrite content.
+- The recipe installs no `hindsight` CLI entry point, so the upstream `hindsight bank set-config` command is not available here; use the dashboard or the API instead.
+
+Recipe `2026.11.9` adds the knowledge bank settings.

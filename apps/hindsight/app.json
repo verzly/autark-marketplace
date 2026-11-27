@@ -7,10 +7,14 @@
     {
       "question": "Hindsight says No model loaded (HTTP 400)",
       "answer": "Start the LLM server and load the model, or enable Switch model by request in the server's API settings. The LLM model ID in Hindsight must match the ID the Models button lists."
+    },
+    {
+      "question": "A knowledge bank document does not show up in recall",
+      "answer": "Knowledge banks are queried by reflect, not by recall or session memory search. Ask a reflect question, or search the bank directly in the Hindsight dashboard. The default text embeddings provider reuses the ONNX model, so no extra packages are needed."
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.8",
+  "version": "2026.11.9",
   "requirements": {
     "pg0": true
   },
@@ -164,6 +168,20 @@
       "kind": "path",
       "default": "{app}/cache/flashrank",
       "help": "Downloaded reranker models. The default keeps them inside this app's folder."
+    },
+    {
+      "key": "kb_enabled",
+      "label": "Knowledge banks",
+      "kind": "boolean",
+      "default": true,
+      "help": "Enables knowledge banks (static document search). They are used by reflect, not by memory recall."
+    },
+    {
+      "key": "kb_embeddings_provider",
+      "label": "Knowledge bank embeddings",
+      "kind": "text",
+      "default": "text",
+      "help": "text reuses this app's ONNX memory embeddings and handles documents, markdown and plain text. local needs the multimodal torch stack, which this recipe does not install. openai, gemini, voyage and cohere need their own API key."
     }
   ],
   "setup": {
@@ -247,6 +265,8 @@
     "HF_HUB_CACHE": "{app}/cache/huggingface/hub",
     "XDG_CACHE_HOME": "{app}/cache",
     "UV_CACHE_DIR": "{app}/cache/uv",
-    "AUTARK_PG0_EXE": "{root}/runtime/mise-data/shims/pg0.exe"
+    "AUTARK_PG0_EXE": "{root}/runtime/mise-data/shims/pg0.exe",
+    "HINDSIGHT_API_ENABLE_KB": "{settings.kb_enabled}",
+    "HINDSIGHT_API_KB_EMBEDDINGS_PROVIDER": "{settings.kb_embeddings_provider}"
   }
 }
