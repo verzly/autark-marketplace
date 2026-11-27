@@ -14,7 +14,7 @@
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.9",
+  "version": "2026.11.10",
   "requirements": {
     "pg0": true
   },
@@ -182,6 +182,62 @@
       "kind": "text",
       "default": "text",
       "help": "text reuses this app's ONNX memory embeddings and handles documents, markdown and plain text. local needs the multimodal torch stack, which this recipe does not install. openai, gemini, voyage and cohere need their own API key."
+    },
+    {
+      "key": "reflect_wall_timeout",
+      "label": "Reflect wall-clock limit (seconds)",
+      "kind": "number",
+      "default": 1800,
+      "help": "Total time allowed for one reflect (or mental model refresh) task. Local reasoning models exceed the upstream 300 second default."
+    },
+    {
+      "key": "reflect_llm_timeout",
+      "label": "Reflect LLM timeout (seconds)",
+      "kind": "number",
+      "default": 300,
+      "help": "Time allowed for a single LLM call inside reflect."
+    },
+    {
+      "key": "reflect_max_context_tokens",
+      "label": "Reflect context budget (tokens)",
+      "kind": "number",
+      "default": 24000,
+      "help": "Upper bound for the context accumulated across reflect iterations. Keep it below the served model's context window."
+    },
+    {
+      "key": "reflect_max_iterations",
+      "label": "Reflect maximum iterations",
+      "kind": "number",
+      "default": 10,
+      "help": "How many agent iterations a reflect task may run."
+    },
+    {
+      "key": "mental_model_refresh_llm_timeout",
+      "label": "Mental model refresh LLM timeout (seconds)",
+      "kind": "number",
+      "default": 600,
+      "help": "Time allowed for one LLM call while refreshing a mental model."
+    },
+    {
+      "key": "mental_model_refresh_llm_reasoning_effort",
+      "label": "Mental model refresh reasoning effort",
+      "kind": "text",
+      "default": "low",
+      "help": "Sent only when the provider supports it. low keeps refresh calls short."
+    },
+    {
+      "key": "mental_model_refresh_llm_max_concurrent",
+      "label": "Mental model refresh concurrency",
+      "kind": "number",
+      "default": 1,
+      "help": "Parallel refresh LLM calls. Keep 1 for a single local model server."
+    },
+    {
+      "key": "mental_model_refresh_llm_max_retries",
+      "label": "Mental model refresh retries",
+      "kind": "number",
+      "default": 2,
+      "help": "Retries per refresh LLM call."
     }
   ],
   "setup": {
@@ -267,6 +323,14 @@
     "UV_CACHE_DIR": "{app}/cache/uv",
     "AUTARK_PG0_EXE": "{root}/runtime/mise-data/shims/pg0.exe",
     "HINDSIGHT_API_ENABLE_KB": "{settings.kb_enabled}",
-    "HINDSIGHT_API_KB_EMBEDDINGS_PROVIDER": "{settings.kb_embeddings_provider}"
+    "HINDSIGHT_API_KB_EMBEDDINGS_PROVIDER": "{settings.kb_embeddings_provider}",
+    "HINDSIGHT_API_REFLECT_WALL_TIMEOUT": "{settings.reflect_wall_timeout}",
+    "HINDSIGHT_API_REFLECT_LLM_TIMEOUT": "{settings.reflect_llm_timeout}",
+    "HINDSIGHT_API_REFLECT_MAX_CONTEXT_TOKENS": "{settings.reflect_max_context_tokens}",
+    "HINDSIGHT_API_REFLECT_MAX_ITERATIONS": "{settings.reflect_max_iterations}",
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_TIMEOUT": "{settings.mental_model_refresh_llm_timeout}",
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_REASONING_EFFORT": "{settings.mental_model_refresh_llm_reasoning_effort}",
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_CONCURRENT": "{settings.mental_model_refresh_llm_max_concurrent}",
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_RETRIES": "{settings.mental_model_refresh_llm_max_retries}"
   }
 }
