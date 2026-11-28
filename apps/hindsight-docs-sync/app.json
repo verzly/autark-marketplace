@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "id": "hindsight-docs-sync",
+  "name": "Hindsight Docs Sync",
+  "description": "Downloads documentation repositories into a local snapshot and syncs it into a Hindsight knowledge bank.",
+  "version": "2026.11.0",
+  "homepage": "https://github.com/verzly/hindsight-docs-sync",
+  "upstream": "verzly/hindsight-docs-sync",
+  "license": "MIT",
+  "requirements": {
+    "disk_gb": 6,
+    "webview2": false,
+    "pg0": false
+  },
+  "faq": [
+    {
+      "question": "Start exits immediately",
+      "answer": "The app is a one-shot CLI. Start runs Download and Sync once, then exits. Run the Download and Sync actions when you want one operation only; Sync alone retries an existing snapshot."
+    },
+    {
+      "question": "A sync failed partway",
+      "answer": "Run Sync again. The snapshot is already on disk, so no download is needed, and Hindsight skips documents it already ingested. Only the remaining documents are uploaded."
+    },
+    {
+      "question": "Where are the downloaded documents",
+      "answer": "In this app's user-data folder: documents for the published snapshot, .cache for Git clones and converted files, and sources.json for a local source list. The CLI repository ships no documentation."
+    },
+    {
+      "question": "How do I change the built-in source list",
+      "answer": "The built-in catalogue comes from this marketplace app and is written to user-data/builtin-sources.json at install and update. Add or override entries in user-data/sources.json, or disable ids in the Disabled sources setting. Point Built-in sources file at an empty value to use only local sources."
+    },
+    {
+      "question": "How are API rate limits handled",
+      "answer": "Requests are paced at four per second by default. A 429 or 5xx response is retried with exponential backoff and jitter, and a Retry-After header is honoured up to 60 seconds. Failed batches are retried one document at a time."
+    }
+  ],
+  "settings": [
+    {
+      "key": "api_url",
+      "label": "Hindsight API URL",
+      "kind": "text",
+      "default": "http://127.0.0.1:8890",
+      "help": "Address of the Hindsight API. No trailing slash."
+    },
+    {
+      "key": "api_key",
+      "label": "API token",
+      "kind": "text",
+      "default": "",
+      "help": "Sent as HINDSIGHT_API_KEY. Leave empty when the Hindsight app runs without authentication."
+    },
+    {
+      "key": "bank",
+      "label": "Knowledge bank",
+      "kind": "text",
+      "default": "docs",
+      "help": "Bank that receives the documents. Created when it does not exist."
+    },
+    {
+      "key": "builtin_sources_file",
+      "label": "Built-in sources file",
+      "kind": "file",
+      "default": "{data}/builtin-sources.json",
+      "help": "Catalogue shipped by the marketplace. Empty disables built-in sources."
+    },
+    {
+      "key": "local_sources_file",
+      "label": "Local sources file",
+      "kind": "file",
+      "default": "{data}/sources.json",
+      "help": "Optional JSON list merged over the built-in list. Same id replaces the built-in entry."
+    },
+    {
+      "key": "disabled_sources",
+      "label": "Disabled sources",
+      "kind": "text",
+      "default": "",
+      "help": "Comma-separated ids to skip, for example php,symfony-7-4."
+    },
+    {
+      "group": "Performance",
+      "key": "workers",
+      "label": "Conversion workers",
+      "kind": "number",
+      "default": 4,
+      "help": "Parallel conversion workers during download (1-32)."
+    },
+    {
+      "group": "Performance",
+      "key": "batch_size",
+      "label": "Documents per request",
+      "kind": "number",
+      "default": 2,
+      "help": "Documents in one ingest request (1-100)."
+    },
+    {
+      "group": "Performance",
+      "key": "requests_per_second",
+      "label": "Requests per second",
+      "kind": "number",
+      "default": 4,
+      "help": "API pacing. 0 disables pacing; 429 responses still back off."
+    }
+  ],
+  "setup": {
+    "tools": {
+      "git": "latest",
+      "pandoc": "3"
+    },
+    "installed_check": "{root}/bin/hindsight-docs-sync.exe",
+    "version_check": [
+      "{root}/bin/hindsight-docs-sync.exe",
+      "--version"
+    ],
+    "steps": [
+      {
+        "name": "Install the docs sync CLI",
+        "run": [
+          "bin",
+          "install",
+          "github.com/verzly/hindsight-docs-sync",
+          "--force"
+        ]
+      },
+      {
+        "name": "Write the built-in source list",
+        "run": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "$ErrorActionPreference = 'Stop'; $dir = '{data}'; New-Item -ItemType Directory -Force -Path $dir | Out-Null; Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/verzly/autark-marketplace/main/apps/hindsight-docs-sync/sources.json' -OutFile (Join-Path $dir 'builtin-sources.json')"
+        ]
+      }
+    ]
+  },
+  "launch": {
+    "run": [
+      "{root}/bin/hindsight-docs-sync.exe",
+      "start"
+    ]
+  },
+  "actions": [
+    {
+      "id": "download",
+      "label": "Download",
+      "run": [
+        "{root}/bin/hindsight-docs-sync.exe",
+        "download"
+      ]
+    },
+    {
+      "id": "sync",
+      "label": "Sync",
+      "run": [
+        "{root}/bin/hindsight-docs-sync.exe",
+        "sync"
+      ]
+    }
+  ],
+  "env": {
+    "DOCS_SYNC_DATA_DIR": "{data}",
+    "HINDSIGHT_URL": "{settings.api_url}",
+    "HINDSIGHT_API_KEY": "{settings.api_key}",
+    "DOCS_SYNC_BANK": "{settings.bank}",
+    "DOCS_SYNC_BUILTIN": "{settings.builtin_sources_file}",
+    "DOCS_SYNC_LOCAL": "{settings.local_sources_file}",
+    "DOCS_SYNC_DISABLE": "{settings.disabled_sources}",
+    "DOCS_SYNC_WORKERS": "{settings.workers}",
+    "DOCS_SYNC_BATCH_SIZE": "{settings.batch_size}",
+    "DOCS_SYNC_RPS": "{settings.requests_per_second}"
+  }
+}

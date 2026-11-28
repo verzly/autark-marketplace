@@ -1,5 +1,5 @@
 {
   "schema": 1,
   "name": "Autark Marketplace",
-  "apps": ["unsloth-studio", "hindsight", "hindsight-control-plane", "hindsight-obsidian-sync", "mntwatch"]
+  "apps": ["unsloth-studio", "hindsight", "hindsight-control-plane", "hindsight-obsidian-sync", "hindsight-docs-sync", "mntwatch"]
 }

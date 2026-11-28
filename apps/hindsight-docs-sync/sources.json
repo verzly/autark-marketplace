@@ -1,0 +1,157 @@
+[
+  {
+    "id": "laravel-13",
+    "repo": "https://github.com/laravel/docs.git",
+    "ref": "13.x",
+    "paths": [
+      "."
+    ],
+    "extensions": [
+      ".md"
+    ]
+  },
+  {
+    "id": "php",
+    "repo": "https://github.com/php/doc-en.git",
+    "paths": [
+      "language",
+      "reference",
+      "features",
+      "security"
+    ],
+    "extensions": [
+      ".xml"
+    ]
+  },
+  {
+    "id": "javascript",
+    "repo": "https://github.com/mdn/content.git",
+    "paths": [
+      "files/en-us/web/javascript"
+    ]
+  },
+  {
+    "id": "typescript",
+    "repo": "https://github.com/microsoft/TypeScript-Website.git",
+    "paths": [
+      "packages/documentation/copy/en"
+    ]
+  },
+  {
+    "id": "vue-3",
+    "repo": "https://github.com/vuejs/docs.git",
+    "paths": [
+      "src"
+    ]
+  },
+  {
+    "id": "rust-book",
+    "repo": "https://github.com/rust-lang/book.git",
+    "paths": [
+      "src"
+    ]
+  },
+  {
+    "id": "rust-reference",
+    "repo": "https://github.com/rust-lang/reference.git",
+    "paths": [
+      "src"
+    ]
+  },
+  {
+    "id": "tauri-2",
+    "repo": "https://github.com/tauri-apps/tauri-docs.git",
+    "paths": [
+      "src/content/docs"
+    ]
+  },
+  {
+    "id": "tailwind-4",
+    "repo": "https://github.com/tailwindlabs/tailwindcss.com.git",
+    "paths": [
+      "src/docs"
+    ],
+    "enabled": true
+  },
+  {
+    "id": "custom",
+    "local": "custom",
+    "paths": [
+      "."
+    ],
+    "allow_empty": true
+  },
+  {
+    "id": "mise",
+    "repo": "https://github.com/jdx/mise.git",
+    "paths": [
+      "docs"
+    ]
+  },
+  {
+    "id": "vitepress",
+    "repo": "https://github.com/vuejs/vitepress.git",
+    "paths": [
+      "docs/en"
+    ]
+  },
+  {
+    "id": "oxc",
+    "repo": "https://github.com/oxc-project/website.git",
+    "paths": [
+      "src/docs"
+    ]
+  },
+  {
+    "id": "pestphp",
+    "repo": "https://github.com/pestphp/docs.git",
+    "paths": [
+      "."
+    ]
+  },
+  {
+    "id": "vitest",
+    "repo": "https://github.com/vitest-dev/vitest.git",
+    "paths": [
+      "docs"
+    ]
+  },
+  {
+    "id": "rectorphp",
+    "website": "https://getrector.com/documentation",
+    "paths": [
+      "."
+    ]
+  },
+  {
+    "id": "symfony-7-4",
+    "repo": "https://github.com/symfony/symfony-docs.git",
+    "ref": "7.4",
+    "paths": [
+      "."
+    ],
+    "extensions": [
+      ".rst"
+    ]
+  },
+  {
+    "id": "vueuse",
+    "repo": "https://github.com/vueuse/vueuse.git",
+    "paths": [
+      "packages"
+    ],
+    "extensions": [
+      ".md"
+    ]
+  },
+  {
+    "id": "echarts",
+    "repo": "https://github.com/apache/echarts-doc.git",
+    "paths": [
+      "en"
+    ],
+    "extensions": [
+      ".md"
+    ]
+  }
+]
