@@ -15,6 +15,7 @@ Each app declares its source: `upstream` (GitHub `owner/repo`, latest release) b
 | [Hindsight](apps/hindsight/README.md) | 2026.11.13 | MIT | https://github.com/vectorize-io/hindsight |
 | [Hindsight Control Plane](apps/hindsight-control-plane/README.md) | 2026.11.2 | ISC | https://github.com/vectorize-io/hindsight |
 | [Hindsight Obsidian Sync](apps/hindsight-obsidian-sync/README.md) | 2026.11.1 | MIT | https://hindsight.vectorize.io |
+| [MntWatch](apps/mntwatch/README.md) | 2026.11.1 | MIT | https://github.com/BoazCohenJ/MntWatch |
 
 ## Adding an app
 

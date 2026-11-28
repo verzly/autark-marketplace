@@ -4,6 +4,7 @@
   "apps": {
     "hindsight": "v1.3.0",
     "mira": "v0.11.1",
+    "mntwatch": "v1.0.2",
     "unsloth-studio": "2026.11.12"
   }
 }

@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "id": "mntwatch",
+  "name": "MntWatch",
+  "description": "Watches host folders and bridges file changes into Windows Subsystem for Linux distros, one watcher per distro at start.",
+  "version": "2026.11.1",
+  "homepage": "https://github.com/BoazCohenJ/MntWatch",
+  "upstream": "BoazCohenJ/MntWatch",
+  "license": "MIT",
+  "requirements": {
+    "disk_gb": 0.1,
+    "webview2": false,
+    "pg0": false
+  },
+  "faq": [
+    {
+      "question": "The app says bin is missing",
+      "answer": "MntWatch is installed by bin, which ships with Autark. Install bin from Built-in tools (bin.exe opens with Install), then run the MntWatch setup again."
+    },
+    {
+      "question": "A folder is not bridged into a distro",
+      "answer": "The folder must exist on the host and must have at least one distro selected. A folder with an empty distro list is skipped on purpose. 'All' uses the distros WSL reports at start, so a distro installed later needs a restart of the app."
+    },
+    {
+      "question": "How is the binary updated",
+      "answer": "The app's Update button re-runs the setup step, which installs the latest release with bin. The Update binary button runs 'bin update mntwatch' directly. Stop the app first when the watcher process should not keep running the old file."
+    }
+  ],
+  "settings": [
+    {
+      "key": "folders",
+      "label": "Folders",
+      "kind": "folders",
+      "default": [],
+      "help": "Each folder is bridged into the distros selected next to it. Choose All to follow every distro WSL reports at start. A folder without a selected distro is skipped."
+    }
+  ],
+  "setup": {
+    "tools": {},
+    "installed_check": "{root}/bin/mntwatch.exe",
+    "steps": [
+      {
+        "name": "Install MntWatch with bin",
+        "run": [
+          "bin",
+          "install",
+          "github.com/BoazCohenJ/MntWatch",
+          "--force"
+        ]
+      }
+    ]
+  },
+  "launch": {
+    "run": [
+      "powershell",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      "$ErrorActionPreference = 'Stop'\n$exe = $env:AUTARK_MNTWATCH_EXE\nif (-not (Test-Path -LiteralPath $exe)) {\n  Write-Error \"MntWatch is missing at $exe. Run the app setup first.\"\n  exit 1\n}\n$entries = @()\nif ($env:AUTARK_MNTWATCH_FOLDERS) {\n  $parsed = $env:AUTARK_MNTWATCH_FOLDERS | ConvertFrom-Json\n  if ($parsed) { $entries = @($parsed) }\n}\nif ($entries.Count -eq 0) {\n  Write-Host 'No folders are configured yet. Add at least one folder in the app settings.'\n  exit 0\n}\n$installed = @()\ntry {\n  $installed = @(wsl.exe -l -q | ForEach-Object { ($_ -replace \"`0\", '').Trim() } | Where-Object { $_ })\n} catch {\n  $installed = @()\n}\n$groups = @{}\nforeach ($entry in $entries) {\n  $folder = [string]$entry.path\n  if (-not $folder) { continue }\n  if (-not (Test-Path -LiteralPath $folder)) {\n    Write-Host \"Skipping missing folder: $folder\"\n    continue\n  }\n  $distros = @($entry.distros)\n  if ($distros -contains 'all') { $distros = $installed }\n  if ($distros.Count -eq 0) {\n    Write-Host \"Skipping folder without a selected distro: $folder\"\n    continue\n  }\n  foreach ($distro in $distros) {\n    $name = [string]$distro\n    if (-not $name) { continue }\n    if (-not $groups.ContainsKey($name)) { $groups[$name] = New-Object System.Collections.ArrayList }\n    if (-not $groups[$name].Contains($folder)) { [void]$groups[$name].Add($folder) }\n  }\n}\nif ($groups.Count -eq 0) {\n  Write-Host 'Nothing to bridge: no folder has a selected distro.'\n  exit 0\n}\n$children = New-Object System.Collections.ArrayList\nforeach ($name in @($groups.Keys)) {\n  $folders = @($groups[$name])\n  $arguments = @('--distro', ('\"' + $name + '\"'), '--run')\n  foreach ($folder in $folders) { $arguments += ('\"' + $folder + '\"') }\n  Write-Host \"Bridging $($folders.Count) folder(s) into $name\"\n  $child = Start-Process -FilePath $exe -ArgumentList $arguments -NoNewWindow -PassThru\n  [void]$children.Add($child)\n}\nforeach ($child in $children) { $child.WaitForExit() }\n"
+    ]
+  },
+  "actions": [
+    {
+      "id": "update-binary",
+      "label": "Update binary",
+      "run": [
+        "bin",
+        "update",
+        "mntwatch"
+      ]
+    }
+  ],
+  "env": {
+    "AUTARK_MNTWATCH_FOLDERS": "{settings.folders}",
+    "AUTARK_MNTWATCH_EXE": "{root}/bin/mntwatch.exe"
+  }
+}
