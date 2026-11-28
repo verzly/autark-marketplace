@@ -29,7 +29,7 @@ The folders setting is a list. Every entry holds a host path and the distros it 
 | Path | Content |
 | --- | --- |
 | `<root>/bin/mntwatch.exe` | Binary installed by bin |
-| `<root>/runtime/bin-config` | bin configuration shared by the host and the app |
+| `<root>/runtime/bin-config/config.json` | bin configuration shared by the host and the app |
 
 MntWatch itself keeps no configuration file; the folder list lives in this app's `settings.json`.
 
