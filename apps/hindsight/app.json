@@ -14,7 +14,7 @@
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.13",
+  "version": "2026.11.28",
   "requirements": {
     "pg0": true
   },
@@ -76,28 +76,63 @@
       "label": "LLM maximum concurrent requests",
       "kind": "number",
       "default": 1,
-      "help": "Positive integer. Keep 1 for an LLM server that handles one request at a time."
+      "help": "Positive integer. Keep 1 for an LLM server that handles one request at a time; extra requests wait in Hindsight's operation queue instead of being dropped."
     },
     {
       "key": "llm_timeout",
       "label": "LLM timeout (seconds)",
       "kind": "number",
-      "default": 300,
+      "default": 600,
       "help": "Maximum time for a single LLM request. Local models need more than the upstream default of 120."
     },
     {
       "key": "retain_llm_timeout",
       "label": "Fact extraction timeout (seconds)",
       "kind": "number",
-      "default": 300,
+      "default": 600,
       "help": "Timeout for the retain (fact extraction) LLM calls. Keep it at or above the LLM timeout."
+    },
+    {
+      "key": "consolidation_llm_timeout",
+      "label": "Consolidation timeout (seconds)",
+      "kind": "number",
+      "default": 900,
+      "help": "Timeout for the consolidation LLM calls. Keep it at or above the LLM timeout."
+    },
+    {
+      "key": "consolidation_llm_batch_size",
+      "label": "Consolidation batch size",
+      "kind": "number",
+      "default": 2,
+      "help": "Facts per consolidation LLM call. A small batch keeps each request short on a local model."
+    },
+    {
+      "key": "retain_subbatch_concurrency",
+      "label": "Fact extraction sub-batch concurrency",
+      "kind": "number",
+      "default": 1,
+      "help": "Parallel retain sub-batches. Keep 1 so a single local model server is not overloaded."
     },
     {
       "key": "llm_max_retries",
       "label": "LLM maximum retries",
       "kind": "number",
-      "default": 1,
-      "help": "Retries per LLM request. Keep 1 to avoid queueing the same request many times on a local server."
+      "default": 3,
+      "help": "Retries per LLM request after a failure. Retries wait for the backoff below instead of being dropped."
+    },
+    {
+      "key": "llm_initial_backoff",
+      "label": "LLM retry initial backoff (seconds)",
+      "kind": "number",
+      "default": 5,
+      "help": "First wait before retrying an LLM request. Later attempts grow towards the maximum backoff."
+    },
+    {
+      "key": "llm_max_backoff",
+      "label": "LLM retry maximum backoff (seconds)",
+      "kind": "number",
+      "default": 60,
+      "help": "Upper bound for the wait between LLM retries."
     },
     {
       "key": "llm_output_language",
@@ -252,6 +287,55 @@
       "kind": "file",
       "default": "",
       "help": "Text file with the embeddings provider key. Read at launch; Autark settings are not secret storage."
+    },
+    {
+      "key": "retain_wall_timeout",
+      "label": "Fact extraction wall-clock limit (seconds)",
+      "kind": "number",
+      "default": 7200,
+      "help": "Total time allowed for one retain task, including queued LLM calls. 0 disables the limit."
+    },
+    {
+      "key": "consolidation_wall_timeout",
+      "label": "Consolidation wall-clock limit (seconds)",
+      "kind": "number",
+      "default": 14400,
+      "help": "Total time allowed for one consolidation task, including queued LLM calls. 0 disables the limit."
+    },
+    {
+      "key": "consolidation_reconcile_interval_seconds",
+      "label": "Consolidation reconcile interval (seconds)",
+      "kind": "number",
+      "default": 300,
+      "help": "How often Hindsight looks for unconsolidated memories and schedules them again."
+    },
+    {
+      "key": "worker_enabled",
+      "label": "Background worker",
+      "kind": "boolean",
+      "default": true,
+      "help": "Processes queued retain, consolidation and other background operations one at a time."
+    },
+    {
+      "key": "worker_max_retries",
+      "label": "Background worker maximum retries",
+      "kind": "number",
+      "default": 10,
+      "help": "How many times a failed background operation is retried before it stays failed."
+    },
+    {
+      "key": "worker_task_retry_backoff_seconds",
+      "label": "Background worker retry backoff (seconds)",
+      "kind": "number",
+      "default": 60,
+      "help": "Wait before retrying a failed background operation."
+    },
+    {
+      "key": "operation_retention_days",
+      "label": "Operation history retention (days)",
+      "kind": "number",
+      "default": 0,
+      "help": "0 keeps the payloads and history of background operations, so a failed task can still be retried later."
     }
   ],
   "setup": {
@@ -318,7 +402,12 @@
     "HINDSIGHT_API_LLM_MAX_CONCURRENT": "{settings.llm_max_concurrent}",
     "HINDSIGHT_API_LLM_TIMEOUT": "{settings.llm_timeout}",
     "HINDSIGHT_API_RETAIN_LLM_TIMEOUT": "{settings.retain_llm_timeout}",
+    "HINDSIGHT_API_CONSOLIDATION_LLM_TIMEOUT": "{settings.consolidation_llm_timeout}",
+    "HINDSIGHT_API_CONSOLIDATION_LLM_BATCH_SIZE": "{settings.consolidation_llm_batch_size}",
+    "HINDSIGHT_API_RETAIN_SUBBATCH_CONCURRENCY": "{settings.retain_subbatch_concurrency}",
     "HINDSIGHT_API_LLM_MAX_RETRIES": "{settings.llm_max_retries}",
+    "HINDSIGHT_API_LLM_INITIAL_BACKOFF": "{settings.llm_initial_backoff}",
+    "HINDSIGHT_API_LLM_MAX_BACKOFF": "{settings.llm_max_backoff}",
     "HINDSIGHT_API_LLM_REASONING_EFFORT": "{settings.llm_reasoning_effort}",
     "HINDSIGHT_API_RETAIN_LLM_REASONING_EFFORT": "{settings.retain_llm_reasoning_effort}",
     "HINDSIGHT_API_CONSOLIDATION_LLM_REASONING_EFFORT": "{settings.consolidation_llm_reasoning_effort}",
@@ -347,6 +436,13 @@
     "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_CONCURRENT": "{settings.mental_model_refresh_llm_max_concurrent}",
     "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_RETRIES": "{settings.mental_model_refresh_llm_max_retries}",
     "AUTARK_HINDSIGHT_KB_KEY_FILE": "{settings.kb_embeddings_api_key_file}",
-    "AUTARK_HINDSIGHT_KB_BASE_URL": "{settings.kb_embeddings_base_url}"
+    "AUTARK_HINDSIGHT_KB_BASE_URL": "{settings.kb_embeddings_base_url}",
+    "HINDSIGHT_API_RETAIN_WALL_TIMEOUT": "{settings.retain_wall_timeout}",
+    "HINDSIGHT_API_CONSOLIDATION_WALL_TIMEOUT": "{settings.consolidation_wall_timeout}",
+    "HINDSIGHT_API_CONSOLIDATION_RECONCILE_INTERVAL_SECONDS": "{settings.consolidation_reconcile_interval_seconds}",
+    "HINDSIGHT_API_WORKER_ENABLED": "{settings.worker_enabled}",
+    "HINDSIGHT_API_WORKER_MAX_RETRIES": "{settings.worker_max_retries}",
+    "HINDSIGHT_API_WORKER_TASK_RETRY_BACKOFF_SECONDS": "{settings.worker_task_retry_backoff_seconds}",
+    "HINDSIGHT_API_OPERATION_RETENTION_DAYS": "{settings.operation_retention_days}"
   }
 }
