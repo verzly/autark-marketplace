@@ -10,11 +10,11 @@
     },
     {
       "question": "A knowledge bank document does not show up in recall",
-      "answer": "Knowledge banks are queried by reflect, not by recall or session memory search. Ask a reflect question, or search the bank directly in the Hindsight dashboard. The default text embeddings provider reuses the ONNX model, so no extra packages are needed."
+      "answer": "Knowledge banks are queried by reflect, not by recall or session memory search. Ask a reflect question, or search the bank directly. Manage banks through the separate Hindsight Control Plane app (set its API URL to this app's port) or the Hindsight API. The default text embeddings provider reuses the ONNX model, so no extra packages are needed."
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.10",
+  "version": "2026.11.11",
   "requirements": {
     "pg0": true
   },
@@ -181,7 +181,7 @@
       "label": "Knowledge bank embeddings",
       "kind": "text",
       "default": "text",
-      "help": "text reuses this app's ONNX memory embeddings and handles documents, markdown and plain text. local needs the multimodal torch stack, which this recipe does not install. openai, gemini, voyage and cohere need their own API key."
+      "help": "text reuses this app's ONNX memory embeddings and handles documents, markdown and plain text. local needs the multimodal torch stack, which this recipe does not install. openai, gemini, voyage and cohere need the key file and base URL below."
     },
     {
       "key": "reflect_wall_timeout",
@@ -238,6 +238,20 @@
       "kind": "number",
       "default": 2,
       "help": "Retries per refresh LLM call."
+    },
+    {
+      "key": "kb_embeddings_base_url",
+      "label": "Knowledge bank embeddings base URL",
+      "kind": "text",
+      "default": "",
+      "help": "OpenAI-compatible embeddings endpoint, for example http://127.0.0.1:8000/v1. Required by the openai provider; blank leaves the variable unset."
+    },
+    {
+      "key": "kb_embeddings_api_key_file",
+      "label": "Knowledge bank embeddings key file",
+      "kind": "file",
+      "default": "",
+      "help": "Text file with the embeddings provider key. Read at launch; Autark settings are not secret storage."
     }
   ],
   "setup": {
@@ -285,7 +299,7 @@
       "{app}/venv/Scripts/python.exe",
       "-I",
       "-c",
-      "import os, sys\nfrom pathlib import Path\ntry:\n    key = Path(os.environ['AUTARK_HINDSIGHT_KEY_FILE']).read_text(encoding='utf-8-sig').strip()\nexcept (OSError, UnicodeError):\n    sys.exit('Cannot read the LLM API key file. Check the LLM API key file setting and UTF-8 encoding.')\nif not key:\n    sys.exit('The LLM API key file is empty.')\npg0 = os.environ.get('AUTARK_PG0_EXE', '')\nif pg0:\n    import pathlib\n    if pathlib.Path(pg0).is_file():\n        os.environ['PG0_EXECUTABLE'] = pg0\nos.environ['HINDSIGHT_API_LLM_API_KEY'] = key\nfrom hindsight_api.main import main\nmain()",
+      "import os, sys\nfrom pathlib import Path\ntry:\n    key = Path(os.environ['AUTARK_HINDSIGHT_KEY_FILE']).read_text(encoding='utf-8-sig').strip()\nexcept (OSError, UnicodeError):\n    sys.exit('Cannot read the LLM API key file. Check the LLM API key file setting and UTF-8 encoding.')\nif not key:\n    sys.exit('The LLM API key file is empty.')\npg0 = os.environ.get('AUTARK_PG0_EXE', '')\nif pg0:\n    import pathlib\n    if pathlib.Path(pg0).is_file():\n        os.environ['PG0_EXECUTABLE'] = pg0\nos.environ['HINDSIGHT_API_LLM_API_KEY'] = key\nkb_key_file = os.environ.get('AUTARK_HINDSIGHT_KB_KEY_FILE', '').strip()\nif kb_key_file:\n    try:\n        kb_key = Path(kb_key_file).read_text(encoding='utf-8-sig').strip()\n    except (OSError, UnicodeError):\n        sys.exit('Cannot read the knowledge bank key file. Check the setting and UTF-8 encoding.')\n    if kb_key:\n        os.environ['HINDSIGHT_API_KB_EMBEDDINGS_API_KEY'] = kb_key\nkb_base_url = os.environ.get('AUTARK_HINDSIGHT_KB_BASE_URL', '').strip()\nif kb_base_url:\n    os.environ['HINDSIGHT_API_KB_EMBEDDINGS_BASE_URL'] = kb_base_url\nfrom hindsight_api.main import main\nmain()",
       "--host",
       "127.0.0.1",
       "--port",
@@ -331,6 +345,8 @@
     "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_TIMEOUT": "{settings.mental_model_refresh_llm_timeout}",
     "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_REASONING_EFFORT": "{settings.mental_model_refresh_llm_reasoning_effort}",
     "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_CONCURRENT": "{settings.mental_model_refresh_llm_max_concurrent}",
-    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_RETRIES": "{settings.mental_model_refresh_llm_max_retries}"
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_RETRIES": "{settings.mental_model_refresh_llm_max_retries}",
+    "AUTARK_HINDSIGHT_KB_KEY_FILE": "{settings.kb_embeddings_api_key_file}",
+    "AUTARK_HINDSIGHT_KB_BASE_URL": "{settings.kb_embeddings_base_url}"
   }
 }

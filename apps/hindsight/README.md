@@ -72,8 +72,9 @@ Hindsight 1.3.0 ships knowledge banks: persistent, searchable reference collecti
 
 - `local` embeddings (EmbeddingGemma, multimodal) need the torch/sentence-transformers stack, which this recipe does not install.
 - `openai`, `gemini`, `voyage` and `cohere` need their own provider key.
-- Knowledge banks are used by **reflect**, not by memory recall or the coding agent's automatic session recall. Ask a reflect question, or search the bank in the dashboard.
-- Create and fill banks in the dashboard, then link them under a memory bank's Bank Configuration. Re-uploading with the same `document_id` replaces the document; it is not model training and does not rewrite content.
+- Knowledge banks are used by **reflect**, not by memory recall or the coding agent's automatic session recall. Ask a reflect question, or search the bank directly.
+- Create and fill banks in the **Hindsight Control Plane** app (a separate marketplace app; point its API URL at this app's port) or through the Hindsight API. Then link them under a memory bank's Bank Configuration. Re-uploading with the same `document_id` replaces the document; it is not model training and does not rewrite content.
+- With the `openai` (or `gemini`, `voyage`, `cohere`) provider, set the knowledge bank embeddings base URL and key file settings; they map to `HINDSIGHT_API_KB_EMBEDDINGS_BASE_URL` and `HINDSIGHT_API_KB_EMBEDDINGS_API_KEY` at launch. `text` needs neither.
 - The recipe installs no `hindsight` CLI entry point, so the upstream `hindsight bank set-config` command is not available here; use the dashboard or the API instead.
 
 Recipe `2026.11.9` adds the knowledge bank settings.

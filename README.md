@@ -11,8 +11,8 @@ Each app declares its source: `upstream` (GitHub `owner/repo`, latest release) b
 | App | Version | License | Source |
 | --- | --- | --- | --- |
 | Unsloth Studio | 2026.11.2 | AGPL-3.0 | https://github.com/unslothai/unsloth |
-| [Mira](apps/mira/README.md) | 2026.11.1 | Apache-2.0 | https://github.com/miracodeai/mira |
-| [Hindsight](apps/hindsight/README.md) | 2026.11.10 | MIT | https://github.com/vectorize-io/hindsight |
+| [Mira](apps/mira/README.md) | 2026.11.2 | Apache-2.0 | https://github.com/miracodeai/mira |
+| [Hindsight](apps/hindsight/README.md) | 2026.11.11 | MIT | https://github.com/vectorize-io/hindsight |
 | [Hindsight Control Plane](apps/hindsight-control-plane/README.md) | 2026.11.2 | ISC | https://github.com/vectorize-io/hindsight |
 | [Hindsight Obsidian Sync](apps/hindsight-obsidian-sync/README.md) | 2026.11.1 | MIT | https://hindsight.vectorize.io |
 

@@ -75,8 +75,11 @@ git diff main...HEAD | <app>/venv/Scripts/mira.exe review --stdin --config <app>
 | `<app>/pg0/instances/mira` | PostgreSQL data directory (reviews, repositories, settings) |
 | `<app>/pg0/installation` | PostgreSQL binaries (or the shared copy in `<root>/runtime/pg0/installation`) |
 | `<app>/user-data/indexes` | Repository indexes and the generated admin password |
+| `<app>/user-data/pg0-credentials.json` | Generated PostgreSQL password for this install |
 | `<app>/source` | Upstream checkout |
 | `<app>/venv` | Python environment |
+
+The first start generates a random PostgreSQL password instead of the pg0 default and stores it in `user-data/pg0-credentials.json`; the database listens on 127.0.0.1 only. An instance created by an earlier recipe keeps working: the launcher rotates its password once with `ALTER ROLE` and falls back to the stored instance URI if that fails, so no data is recreated or lost. Protect the app folder like any other credential store.
 
 An update re-clones the source, reinstalls the Python packages and rebuilds the dashboard. The database and `user-data` are kept. A failed install leaves them untouched. Uninstalling the app from Autark removes the launcher entry; delete the app folder to remove the database and indexes.
 
