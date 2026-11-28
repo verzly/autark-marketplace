@@ -95,3 +95,25 @@ Local reasoning models routinely exceed the upstream 300 second reflect limit. T
 | Mental model refresh retries | 2 | Retries per refresh call |
 
 If a refresh stops with `OutputTooLongError`, no explicit `HINDSIGHT_API_REFLECT_MAX_COMPLETION_TOKENS` is set by this recipe; the model server's own output and context limits still apply. Recipe `2026.11.10` adds these settings.
+
+## Queue, retry and worker tuning
+
+`HINDSIGHT_API_LLM_MAX_CONCURRENT` stays `1`, so a second request waits in Hindsight's persistent operation queue instead of overloading the local model server. The limit slows processing; it does not drop queued memories. Keep the defaults for one local model and raise them only after that server handles the load.
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| LLM timeout | 600 s | One LLM request |
+| Fact extraction timeout | 600 s | One retain LLM request |
+| Consolidation timeout | 900 s | One consolidation LLM request |
+| LLM retries | 3 | Retries after a failed request |
+| LLM retry initial / maximum backoff | 5 s / 60 s | Wait before each retry |
+| Fact extraction sub-batch concurrency | 1 | Parallel retain sub-batches |
+| Consolidation batch size | 2 | Facts per consolidation request |
+| Retain wall-clock limit | 7200 s | Whole retain task, `0` disables |
+| Consolidation wall-clock limit | 14400 s | Whole consolidation task, `0` disables |
+| Consolidation reconcile interval | 300 s | How often unconsolidated memories are scheduled again |
+| Background worker | on | Processes queued operations serially |
+| Worker retries / retry backoff | 10 / 60 s | Whole-operation retries |
+| Operation history retention | 0 days | `0` keeps payloads so a failed task can be retried |
+
+Recipe `2026.11.28` adds these settings and raises the existing LLM and retain timeouts. Restart Hindsight after changing them.
