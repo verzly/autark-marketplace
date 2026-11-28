@@ -23,7 +23,7 @@ Node is only used for the dashboard build. PostgreSQL binaries are extracted int
 Autark launches a small Python bootstrap in the app's venv. It:
 
 1. points `PG0_EXECUTABLE` at Autark's pg0 shim when that file exists (otherwise the bundled pg0 binary),
-2. starts the `mira` pg0 instance on the configured PostgreSQL port (pg0 falls back to a free port and the real port is used),
+2. starts the `mira` pg0 instance on the configured PostgreSQL port (an already taken port fails the start),
 3. exports the instance URI as `DATABASE_URL`,
 4. writes `<app>/user-data/mira.yaml` with the configured `llm.base_url` and `llm.model`,
 5. reads the secret files and exports `OPENROUTER_API_KEY`, `ADMIN_PASSWORD` and the GitHub App values,
@@ -40,7 +40,7 @@ Autark offers the latest release (`v0.11.1`, from `versions.json`), `main` as a 
 | Setting | Purpose |
 | --- | --- |
 | Port | Dashboard and API port, default `8000` |
-| PostgreSQL port | Port for the app-local instance, default `55432` |
+| PostgreSQL port | Port for the app-local instance, default `55432`; startup fails when another server already listens on it |
 | pg0 binaries folder | PostgreSQL payload; app-local by default, shareable through the migration buttons |
 | LLM base URL | OpenAI-compatible endpoint, default OpenRouter |
 | LLM model | Model used for review, indexing and security passes |
@@ -79,7 +79,7 @@ git diff main...HEAD | <app>/venv/Scripts/mira.exe review --stdin --config <app>
 | `<app>/source` | Upstream checkout |
 | `<app>/venv` | Python environment |
 
-The first start generates a random PostgreSQL password instead of the pg0 default and stores it in `user-data/pg0-credentials.json`; the database listens on 127.0.0.1 only. An instance created by an earlier recipe keeps working: the launcher starts it with the credentials stored in the instance metadata, rotates the password once with `ALTER ROLE`, and falls back to the stored instance URI if that fails, so no data is recreated or lost. Protect the app folder like any other credential store.
+The first start generates a random PostgreSQL password instead of the pg0 default and stores it in `user-data/pg0-credentials.json`; the database listens on 127.0.0.1 only. An instance created by an earlier recipe keeps working with its existing credentials: the launcher reuses them and records them in that file instead of rotating them, because pg0 stores the instance password in its own metadata and an `ALTER ROLE` rotation would desynchronize the two. Such an instance therefore keeps the pg0 default password until it is recreated; delete `<app>/pg0/instances/mira` only if you accept losing the data. Protect the app folder like any other credential store.
 
 An update re-clones the source, reinstalls the Python packages and rebuilds the dashboard. The database and `user-data` are kept. A failed install leaves them untouched. Uninstalling the app from Autark removes the launcher entry; delete the app folder to remove the database and indexes.
 
