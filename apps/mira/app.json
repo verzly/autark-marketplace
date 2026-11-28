@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "id": "mira",
+  "name": "Mira",
+  "faq": [
+    {
+      "question": "The dashboard asks for a login I never set",
+      "answer": "Without an admin password file, Mira generates a random password on the first start and writes it to user-data/indexes/initial_admin_password inside this app's folder. Set the Dashboard admin password file setting to choose your own."
+    },
+    {
+      "question": "Reviews fail with an LLM or API key error",
+      "answer": "Set the LLM API key file to a text file holding your provider key, and check the LLM base URL and model. OpenRouter needs its /api/v1 path. Local endpoints may need the model name their server reports."
+    },
+    {
+      "question": "GitHub pull requests are not reviewed",
+      "answer": "Fill the GitHub App ID, private key file and webhook secret file, then expose /github/webhook to GitHub. Without those settings Mira still runs the dashboard and local reviews."
+    },
+    {
+      "question": "PostgreSQL did not start on the configured port",
+      "answer": "pg0 picks a free port when the configured one is taken and Mira receives the actual connection string. Check the app output for the chosen port."
+    }
+  ],
+  "description": "Self-hosted AI code review with repository indexing, a dashboard and your own LLM key.",
+  "version": "2026.11.4",
+  "homepage": "https://github.com/miracodeai/mira",
+  "upstream": "miracodeai/mira",
+  "license": "Apache-2.0",
+  "requirements": {
+    "pg0": true
+  },
+  "settings": [
+    {
+      "key": "port",
+      "label": "Port",
+      "kind": "port",
+      "default": 8000,
+      "help": "Local port for the Mira dashboard and API."
+    },
+    {
+      "key": "pg0_port",
+      "label": "PostgreSQL port",
+      "kind": "port",
+      "default": 55432,
+      "help": "Port for this app's pg0 PostgreSQL instance. pg0 picks a free port when it is taken."
+    },
+    {
+      "key": "pg0_installation_dir",
+      "label": "pg0 binaries folder",
+      "kind": "path",
+      "default": "{app}/pg0/installation",
+      "help": "PostgreSQL binaries for the embedded database. Sharing Autark's copy is opt-in through the migration buttons on this page. The databases always stay in this app."
+    },
+    {
+      "key": "llm_base_url",
+      "label": "LLM base URL",
+      "kind": "text",
+      "default": "https://openrouter.ai/api/v1",
+      "help": "OpenAI-compatible endpoint, such as OpenRouter, vLLM or Ollama. Plain http is accepted only for local hosts."
+    },
+    {
+      "key": "llm_model",
+      "label": "LLM model",
+      "kind": "text",
+      "default": "anthropic/claude-sonnet-4-6",
+      "help": "Model ID for review, indexing and security passes. The dashboard can override it later."
+    },
+    {
+      "key": "llm_api_key_file",
+      "label": "LLM API key file",
+      "kind": "file",
+      "default": "",
+      "help": "Path to a text file holding the API key. Autark settings are not secret storage. Blank runs the dashboard without an LLM."
+    },
+    {
+      "key": "admin_password_file",
+      "label": "Dashboard admin password file",
+      "kind": "file",
+      "default": "",
+      "help": "Optional. Blank lets Mira generate a random password on the first start and write it under user-data/indexes."
+    },
+    {
+      "key": "github_app_id",
+      "label": "GitHub App ID",
+      "kind": "text",
+      "default": "",
+      "help": "Optional. Enables the GitHub webhook route; the private key and webhook secret come from the files below."
+    },
+    {
+      "key": "github_private_key_file",
+      "label": "GitHub App private key file",
+      "kind": "file",
+      "default": "",
+      "help": "PEM file downloaded from the GitHub App settings."
+    },
+    {
+      "key": "webhook_secret_file",
+      "label": "GitHub webhook secret file",
+      "kind": "file",
+      "default": "",
+      "help": "Text file holding the webhook secret configured on the GitHub App."
+    }
+  ],
+  "setup": {
+    "tools": {
+      "python": "3.12",
+      "uv": "0.13.1",
+      "node": "22"
+    },
+    "source": {
+      "url": "https://github.com/miracodeai/mira.git",
+      "branch": "main"
+    },
+    "installed_check": "{app}/venv/Scripts/mira.exe",
+    "version_check": [
+      "{app}/venv/Scripts/python.exe",
+      "-I",
+      "-c",
+      "import importlib.metadata as m; print(m.version('mira-reviewer'))"
+    ],
+    "steps": [
+      {
+        "name": "Create Python environment",
+        "run": [
+          "uv",
+          "venv",
+          "--allow-existing",
+          "--python",
+          "3.12",
+          "{app}/venv"
+        ]
+      },
+      {
+        "name": "Install Mira with the server extras and the pg0 SDK",
+        "run": [
+          "uv",
+          "pip",
+          "install",
+          "--python",
+          "{app}/venv/Scripts/python.exe",
+          "-e",
+          "{source}[serve]",
+          "pg0-embedded==0.17.0"
+        ]
+      },
+      {
+        "name": "Install dashboard dependencies",
+        "run": [
+          "npm",
+          "--prefix",
+          "{source}/ui/mira",
+          "ci"
+        ]
+      },
+      {
+        "name": "Build the dashboard",
+        "run": [
+          "npm",
+          "--prefix",
+          "{source}/ui/mira",
+          "run",
+          "build"
+        ]
+      }
+    ]
+  },
+  "launch": {
+    "run": [
+      "{app}/venv/Scripts/python.exe",
+      "-I",
+      "-c",
+      "import json, os, pathlib, sys\napp_dir = pathlib.Path(os.environ[\"AUTARK_APP_DIR\"])\n\ndef secret(name):\n    path = os.environ.get(name, \"\").strip()\n    if not path:\n        return \"\"\n    try:\n        return pathlib.Path(path).read_text(encoding=\"utf-8-sig\").strip()\n    except OSError:\n        return \"\"\n\nexe = os.environ.get(\"AUTARK_PG0_EXE\", \"\")\nif exe and pathlib.Path(exe).is_file():\n    os.environ[\"PG0_EXECUTABLE\"] = exe\ncred_path = pathlib.Path(os.environ[\"AUTARK_MIRA_PG0_CREDENTIALS\"])\npg0_port = int(os.environ.get(\"AUTARK_MIRA_PG0_PORT\", \"55432\"))\n\ndef load_credentials():\n    try:\n        data = json.loads(cred_path.read_text(encoding=\"utf-8\"))\n        user, password = data[\"user\"], data[\"password\"]\n        if isinstance(user, str) and isinstance(password, str) and user and password:\n            return user, password\n    except (OSError, ValueError, KeyError, TypeError):\n        pass\n    return None\n\ndef split_credentials(uri):\n    import urllib.parse\n    parts = urllib.parse.urlsplit(uri or \"\")\n    return (urllib.parse.unquote(parts.username) if parts.username else \"postgres\",\n            urllib.parse.unquote(parts.password) if parts.password else \"postgres\")\n\ndef build_url(uri, user, password):\n    import urllib.parse\n    parts = urllib.parse.urlsplit(uri)\n    host = parts.hostname or \"127.0.0.1\"\n    port = parts.port or 5432\n    netloc = urllib.parse.quote(user, safe=\"\") + \":\" + urllib.parse.quote(password, safe=\"\") + \"@\" + host + \":\" + str(port)\n    return urllib.parse.urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))\n\ndef start_instance(user, password):\n    from pg0 import Pg0, Pg0AlreadyRunningError\n    pg = Pg0(name=\"mira\", port=pg0_port, username=user, password=password, database=\"mira\")\n    try:\n        return pg.start()\n    except Pg0AlreadyRunningError:\n        return pg.info()\n\ndef probe_instance():\n    from pg0 import Pg0\n    try:\n        return Pg0(name=\"mira\", port=pg0_port, database=\"mira\").info()\n    except Exception:\n        return None\n\ndef save_credentials(user, password):\n    cred_path.parent.mkdir(parents=True, exist_ok=True)\n    cred_path.write_text(json.dumps({\"user\": user, \"password\": password}), encoding=\"utf-8\")\n\nimport secrets\ncredentials = load_credentials()\nif credentials is not None:\n    user, password = credentials\n    info = start_instance(user, password)\nelse:\n    probe = probe_instance()\n    instance_dir = pathlib.Path(os.environ.get(\"PG0_HOME\", \"\")) / \"instances\" / \"mira\"\n    if getattr(probe, \"uri\", None) or instance_dir.is_dir():\n        # Rotating here would desynchronize the password pg0 keeps in its own metadata.\n        user, password = split_credentials(getattr(probe, \"uri\", None))\n        info = start_instance(user, password)\n    else:\n        user, password = \"postgres\", secrets.token_urlsafe(24)\n        info = start_instance(user, password)\n    save_credentials(user, password)\nuri = getattr(info, \"uri\", None)\nif not uri:\n    sys.exit(\"The mira pg0 instance is not running and reported no connection URI.\")\nos.environ[\"DATABASE_URL\"] = build_url(uri, user, password)\nmodel = os.environ.get(\"AUTARK_MIRA_LLM_MODEL\", \"\").strip()\nbase = os.environ.get(\"AUTARK_MIRA_LLM_BASE_URL\", \"\").strip()\nconfig = pathlib.Path(os.environ[\"AUTARK_MIRA_CONFIG\"])\nconfig.parent.mkdir(parents=True, exist_ok=True)\nlines = [\"llm:\"]\nif model:\n    lines.append(\"  model: \" + json.dumps(model))\nif base:\n    lines.append(\"  base_url: \" + json.dumps(base))\nif len(lines) > 1:\n    config.write_text(\"\\n\".join(lines) + \"\\n\", encoding=\"utf-8\")\nelse:\n    config = None\nkey = secret(\"AUTARK_MIRA_KEY_FILE\")\nif key:\n    os.environ[\"OPENROUTER_API_KEY\"] = key\nadmin = secret(\"AUTARK_MIRA_ADMIN_PASSWORD_FILE\")\nif admin:\n    os.environ[\"ADMIN_PASSWORD\"] = admin\nif config is not None:\n    from mira.config import set_global_defaults\n    set_global_defaults(str(config))\napp_id = os.environ.get(\"AUTARK_MIRA_GITHUB_APP_ID\", \"\").strip()\ngithub_key = secret(\"AUTARK_MIRA_GITHUB_KEY_FILE\") if app_id else \"\"\nwebhook = secret(\"AUTARK_MIRA_WEBHOOK_SECRET_FILE\")\nfrom mira.platforms.github.auth import GitHubAppAuth\nfrom mira.platforms.server import create_app\nauth = None\nif app_id and github_key:\n    auth = GitHubAppAuth(app_id=app_id, private_key=github_key)\nbot_name = \"miracodeai\"\nif auth is not None:\n    import asyncio\n    try:\n        detected = asyncio.run(auth.get_bot_identity())\n    except Exception:\n        detected = None\n    if detected and all(c.isascii() and (c.isalnum() or c in \"_-\") for c in detected):\n        bot_name = detected\napplication = create_app(app_auth=auth, webhook_secret=webhook if auth is not None else None, bot_name=bot_name)\nif auth is not None:\n    try:\n        from mira.dashboard.api import _app_db\n        _app_db.set_setting(\"bot_name\", bot_name)\n    except Exception:\n        pass\nimport uvicorn\nuvicorn.run(application, host=\"127.0.0.1\", port=int(sys.argv[1]))",
+      "{settings.port}"
+    ],
+    "url": "http://127.0.0.1:{settings.port}/"
+  },
+  "env": {
+    "AUTARK_APP_DIR": "{app}",
+    "AUTARK_PG0_EXE": "{root}/runtime/mise-data/shims/pg0.exe",
+    "AUTARK_MIRA_PG0_PORT": "{settings.pg0_port}",
+    "AUTARK_MIRA_CONFIG": "{app}/user-data/mira.yaml",
+    "AUTARK_MIRA_KEY_FILE": "{settings.llm_api_key_file}",
+    "AUTARK_MIRA_LLM_BASE_URL": "{settings.llm_base_url}",
+    "AUTARK_MIRA_LLM_MODEL": "{settings.llm_model}",
+    "AUTARK_MIRA_ADMIN_PASSWORD_FILE": "{settings.admin_password_file}",
+    "AUTARK_MIRA_GITHUB_APP_ID": "{settings.github_app_id}",
+    "AUTARK_MIRA_GITHUB_KEY_FILE": "{settings.github_private_key_file}",
+    "AUTARK_MIRA_WEBHOOK_SECRET_FILE": "{settings.webhook_secret_file}",
+    "PG0_HOME": "{app}/pg0",
+    "PG0_INSTALLATION_DIR": "{settings.pg0_installation_dir}",
+    "MIRA_INDEX_DIR": "{app}/user-data/indexes",
+    "UV_CACHE_DIR": "{app}/cache/uv",
+    "AUTARK_MIRA_PG0_CREDENTIALS": "{app}/user-data/pg0-credentials.json"
+  }
+}

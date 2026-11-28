@@ -7,10 +7,14 @@
     {
       "question": "Hindsight says No model loaded (HTTP 400)",
       "answer": "Start the LLM server and load the model, or enable Switch model by request in the server's API settings. The LLM model ID in Hindsight must match the ID the Models button lists."
+    },
+    {
+      "question": "A knowledge bank document does not show up in recall",
+      "answer": "Knowledge banks are queried by reflect, not by recall or session memory search. Ask a reflect question, or search the bank directly. Manage banks through the separate Hindsight Control Plane app (set its API URL to this app's port) or the Hindsight API. The default text embeddings provider reuses the ONNX model, so no extra packages are needed."
     }
   ],
   "description": "Local memory API with ONNX embeddings, FlashRank and embedded PostgreSQL. Requires a running OpenAI-compatible LLM.",
-  "version": "2026.11.8",
+  "version": "2026.11.13",
   "requirements": {
     "pg0": true
   },
@@ -164,6 +168,90 @@
       "kind": "path",
       "default": "{app}/cache/flashrank",
       "help": "Downloaded reranker models. The default keeps them inside this app's folder."
+    },
+    {
+      "key": "kb_enabled",
+      "label": "Knowledge banks",
+      "kind": "boolean",
+      "default": true,
+      "help": "Enables knowledge banks (static document search). They are used by reflect, not by memory recall."
+    },
+    {
+      "key": "kb_embeddings_provider",
+      "label": "Knowledge bank embeddings",
+      "kind": "text",
+      "default": "text",
+      "help": "text reuses this app's ONNX memory embeddings and handles documents, markdown and plain text. local needs the multimodal torch stack, which this recipe does not install. openai, gemini, voyage and cohere need the key file and base URL below."
+    },
+    {
+      "key": "reflect_wall_timeout",
+      "label": "Reflect wall-clock limit (seconds)",
+      "kind": "number",
+      "default": 1800,
+      "help": "Total time allowed for one reflect (or mental model refresh) task. Local reasoning models exceed the upstream 300 second default."
+    },
+    {
+      "key": "reflect_llm_timeout",
+      "label": "Reflect LLM timeout (seconds)",
+      "kind": "number",
+      "default": 300,
+      "help": "Time allowed for a single LLM call inside reflect."
+    },
+    {
+      "key": "reflect_max_context_tokens",
+      "label": "Reflect context budget (tokens)",
+      "kind": "number",
+      "default": 24000,
+      "help": "Upper bound for the context accumulated across reflect iterations. Keep it below the served model's context window."
+    },
+    {
+      "key": "reflect_max_iterations",
+      "label": "Reflect maximum iterations",
+      "kind": "number",
+      "default": 10,
+      "help": "How many agent iterations a reflect task may run."
+    },
+    {
+      "key": "mental_model_refresh_llm_timeout",
+      "label": "Mental model refresh LLM timeout (seconds)",
+      "kind": "number",
+      "default": 600,
+      "help": "Time allowed for one LLM call while refreshing a mental model."
+    },
+    {
+      "key": "mental_model_refresh_llm_reasoning_effort",
+      "label": "Mental model refresh reasoning effort",
+      "kind": "text",
+      "default": "low",
+      "help": "Sent only when the provider supports it. low keeps refresh calls short."
+    },
+    {
+      "key": "mental_model_refresh_llm_max_concurrent",
+      "label": "Mental model refresh concurrency",
+      "kind": "number",
+      "default": 1,
+      "help": "Parallel refresh LLM calls. Keep 1 for a single local model server."
+    },
+    {
+      "key": "mental_model_refresh_llm_max_retries",
+      "label": "Mental model refresh retries",
+      "kind": "number",
+      "default": 2,
+      "help": "Retries per refresh LLM call."
+    },
+    {
+      "key": "kb_embeddings_base_url",
+      "label": "Knowledge bank embeddings base URL",
+      "kind": "text",
+      "default": "",
+      "help": "OpenAI-compatible embeddings endpoint, for example http://127.0.0.1:8000/v1. Required by the openai provider; blank leaves the variable unset."
+    },
+    {
+      "key": "kb_embeddings_api_key_file",
+      "label": "Knowledge bank embeddings key file",
+      "kind": "file",
+      "default": "",
+      "help": "Text file with the embeddings provider key. Read at launch; Autark settings are not secret storage."
     }
   ],
   "setup": {
@@ -211,7 +299,7 @@
       "{app}/venv/Scripts/python.exe",
       "-I",
       "-c",
-      "import os, sys\nfrom pathlib import Path\ntry:\n    key = Path(os.environ['AUTARK_HINDSIGHT_KEY_FILE']).read_text(encoding='utf-8-sig').strip()\nexcept (OSError, UnicodeError):\n    sys.exit('Cannot read the LLM API key file. Check the LLM API key file setting and UTF-8 encoding.')\nif not key:\n    sys.exit('The LLM API key file is empty.')\npg0 = os.environ.get('AUTARK_PG0_EXE', '')\nif pg0:\n    import pathlib\n    if pathlib.Path(pg0).is_file():\n        os.environ['PG0_EXECUTABLE'] = pg0\nos.environ['HINDSIGHT_API_LLM_API_KEY'] = key\nfrom hindsight_api.main import main\nmain()",
+      "import os, sys\nfrom pathlib import Path\ntry:\n    key = Path(os.environ['AUTARK_HINDSIGHT_KEY_FILE']).read_text(encoding='utf-8-sig').strip()\nexcept (OSError, UnicodeError):\n    sys.exit('Cannot read the LLM API key file. Check the LLM API key file setting and UTF-8 encoding.')\nif not key:\n    sys.exit('The LLM API key file is empty.')\npg0 = os.environ.get('AUTARK_PG0_EXE', '')\nif pg0:\n    import pathlib\n    if pathlib.Path(pg0).is_file():\n        os.environ['PG0_EXECUTABLE'] = pg0\nkb_key = ''\nkb_key_file = os.environ.get('AUTARK_HINDSIGHT_KB_KEY_FILE', '').strip()\nif kb_key_file:\n    try:\n        kb_key = Path(kb_key_file).read_text(encoding='utf-8-sig').strip()\n    except (OSError, UnicodeError):\n        sys.exit('Cannot read the knowledge bank key file. Check the setting and UTF-8 encoding.')\ndef check_endpoint(value, label):\n    import ipaddress, urllib.parse\n    parsed = urllib.parse.urlsplit(value)\n    if parsed.scheme not in ('http', 'https') or not parsed.hostname:\n        sys.exit('The ' + label + ' must be an http(s) URL with a host.')\n    host = parsed.hostname\n    local = host == 'localhost' or host.endswith('.localhost')\n    try:\n        address = ipaddress.ip_address(host)\n        local = local or address.is_loopback or address.is_private\n    except ValueError:\n        local = local or '.' not in host\n    if parsed.scheme == 'http' and not local:\n        sys.exit('Plain http is allowed only for a local ' + label + '; use https for a remote host.')\n    return value\n\nkb_base_url = os.environ.get('AUTARK_HINDSIGHT_KB_BASE_URL', '').strip()\nif kb_base_url:\n    os.environ['HINDSIGHT_API_KB_EMBEDDINGS_BASE_URL'] = check_endpoint(kb_base_url, 'knowledge bank endpoint')\nllm_base_url = os.environ.get('HINDSIGHT_API_LLM_BASE_URL', '').strip()\nif llm_base_url:\n    os.environ['HINDSIGHT_API_LLM_BASE_URL'] = check_endpoint(llm_base_url, 'LLM endpoint')\nif kb_key:\n    os.environ['HINDSIGHT_API_KB_EMBEDDINGS_API_KEY'] = kb_key\nos.environ['HINDSIGHT_API_LLM_API_KEY'] = key\nfrom hindsight_api.main import main\nmain()",
       "--host",
       "127.0.0.1",
       "--port",
@@ -247,6 +335,18 @@
     "HF_HUB_CACHE": "{app}/cache/huggingface/hub",
     "XDG_CACHE_HOME": "{app}/cache",
     "UV_CACHE_DIR": "{app}/cache/uv",
-    "AUTARK_PG0_EXE": "{root}/runtime/mise-data/shims/pg0.exe"
+    "AUTARK_PG0_EXE": "{root}/runtime/mise-data/shims/pg0.exe",
+    "HINDSIGHT_API_ENABLE_KB": "{settings.kb_enabled}",
+    "HINDSIGHT_API_KB_EMBEDDINGS_PROVIDER": "{settings.kb_embeddings_provider}",
+    "HINDSIGHT_API_REFLECT_WALL_TIMEOUT": "{settings.reflect_wall_timeout}",
+    "HINDSIGHT_API_REFLECT_LLM_TIMEOUT": "{settings.reflect_llm_timeout}",
+    "HINDSIGHT_API_REFLECT_MAX_CONTEXT_TOKENS": "{settings.reflect_max_context_tokens}",
+    "HINDSIGHT_API_REFLECT_MAX_ITERATIONS": "{settings.reflect_max_iterations}",
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_TIMEOUT": "{settings.mental_model_refresh_llm_timeout}",
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_REASONING_EFFORT": "{settings.mental_model_refresh_llm_reasoning_effort}",
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_CONCURRENT": "{settings.mental_model_refresh_llm_max_concurrent}",
+    "HINDSIGHT_API_MENTAL_MODEL_REFRESH_LLM_MAX_RETRIES": "{settings.mental_model_refresh_llm_max_retries}",
+    "AUTARK_HINDSIGHT_KB_KEY_FILE": "{settings.kb_embeddings_api_key_file}",
+    "AUTARK_HINDSIGHT_KB_BASE_URL": "{settings.kb_embeddings_base_url}"
   }
 }

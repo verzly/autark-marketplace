@@ -65,3 +65,33 @@ Existing installs that still hold their own copy can switch with the **Move to A
 When Autark has pg0 installed as a built-in tool (`<root>/runtime/mise-data/shims/pg0.exe`), the launch command points `PG0_EXECUTABLE` at it. The bundled copy inside this app is then unused. Without that file the app keeps using its own bundled `pg0.exe`, so nothing breaks.
 
 Recipe `2026.11.8` declares this host-executable use with `requirements.pg0: true`. Autark blocks removal of its pg0 while Hindsight is installed, even when stopped, and shows Hindsight in the blocking-app list. This protection is independent of the PostgreSQL binaries folder: choosing an app-local payload does not mean the app uses its bundled executable. Refresh the marketplace to select the newer stable recipe; pinned previews retain their own recipe declaration.
+
+## Knowledge banks
+
+Hindsight 1.3.0 ships knowledge banks: persistent, searchable reference collections separate from a memory bank. They are enabled by default. Autark defaults `HINDSIGHT_API_KB_EMBEDDINGS_PROVIDER` to `text`, which reuses this app's ONNX embeddings, so documents and markdown work without extra packages or an API key.
+
+- `local` embeddings (EmbeddingGemma, multimodal) need the torch/sentence-transformers stack, which this recipe does not install.
+- `openai`, `gemini`, `voyage` and `cohere` need their own provider key.
+- Knowledge banks are used by **reflect**, not by memory recall or the coding agent's automatic session recall. Ask a reflect question, or search the bank directly.
+- Create and fill banks in the **Hindsight Control Plane** app (a separate marketplace app; point its API URL at this app's port) or through the Hindsight API. Then link them under a memory bank's Bank Configuration. Re-uploading with the same `document_id` replaces the document; it is not model training and does not rewrite content.
+- With the `openai` (or `gemini`, `voyage`, `cohere`) provider, set the knowledge bank embeddings base URL and key file settings; they map to `HINDSIGHT_API_KB_EMBEDDINGS_BASE_URL` and `HINDSIGHT_API_KB_EMBEDDINGS_API_KEY` at launch. `text` needs neither. Both the LLM and the knowledge bank base URL accept plain `http` only for a loopback, private-range or dotless host, because the key travels with the request; a remote endpoint must use `https`.
+- The recipe installs no `hindsight` CLI entry point, so the upstream `hindsight bank set-config` command is not available here; use the dashboard or the API instead.
+
+Recipe `2026.11.9` adds the knowledge bank settings.
+
+## Reflect and mental model tuning
+
+Local reasoning models routinely exceed the upstream 300 second reflect limit. The recipe exposes these settings (defaults are a starting point, not a requirement):
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| Reflect wall-clock limit | 1800 s | Total time for one reflect or mental model refresh; `0` disables the limit |
+| Reflect LLM timeout | 300 s | One LLM call inside reflect |
+| Reflect context budget | 24000 tokens | Accumulated context across iterations; keep it below the served model's window |
+| Reflect maximum iterations | 10 | Agent iterations per reflect |
+| Mental model refresh LLM timeout | 600 s | One refresh LLM call |
+| Mental model refresh reasoning effort | low | Only sent when the provider supports it |
+| Mental model refresh concurrency | 1 | Parallel refresh calls; keep 1 for one local server |
+| Mental model refresh retries | 2 | Retries per refresh call |
+
+If a refresh stops with `OutputTooLongError`, no explicit `HINDSIGHT_API_REFLECT_MAX_COMPLETION_TOKENS` is set by this recipe; the model server's own output and context limits still apply. Recipe `2026.11.10` adds these settings.
